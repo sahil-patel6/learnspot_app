@@ -1,14 +1,14 @@
 import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
-import 'package:validatorless/validatorless.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:validatorless/validatorless.dart';
 
-import '../preferences.dart';
 import '../Models/User.dart';
 import '../Services/ProfileService.dart';
+import '../preferences.dart';
 
 class UpdateProfileScreen extends StatefulWidget {
   User user;
@@ -31,6 +31,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   final ImagePicker _picker = ImagePicker();
   Uint8List? image;
   XFile? picked_image;
+
   initData() {
     setState(() {
       nameController.text = widget.user.name ?? "";
@@ -82,11 +83,91 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   }
 
   final formKey = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Update My Profile"),
+        actions: [
+          isLoading
+              ? Center(
+                  child: Container(
+                    width: 20,
+                    height: 20,
+                    margin: const EdgeInsets.only(right: 10),
+                    child: const CircularProgressIndicator(
+                      color: Colors.white,
+                    ),
+                  ),
+                )
+              : IconButton(
+                  onPressed: () async {
+                    print(await Preferences.getUser());
+                    if (formKey.currentState!.validate()) {
+                      setState(() {
+                        isLoading = true;
+                      });
+                      try {
+                        updateUserData();
+                        String profile_pic = "";
+                        String fcs_profile_pic_path = "";
+                        if (image != null && picked_image != null) {
+                          final storage = FirebaseStorage.instance;
+                          if (widget.user.type_of_user == "Teacher") {
+                            fcs_profile_pic_path =
+                                "profile_pics/teachers/${picked_image?.name}";
+                          } else if (widget.user.type_of_user == "Student") {
+                            fcs_profile_pic_path =
+                                "profile_pics/students/${picked_image?.name}";
+                          } else {
+                            fcs_profile_pic_path =
+                                "profile_pics/parents/${picked_image?.name}";
+                          }
+
+                          TaskSnapshot task = await storage
+                              .ref(fcs_profile_pic_path)
+                              .putData(image!);
+                          if (task.state == TaskState.error) {
+                            print("An error occured");
+                          } else {
+                            if (widget.user.fcsProfilePicPath != "") {
+                              await storage
+                                  .ref(widget.user.fcsProfilePicPath)
+                                  .delete();
+                            }
+                            widget.user.profilePic =
+                                await task.ref.getDownloadURL();
+                            widget.user.fcsProfilePicPath =
+                                fcs_profile_pic_path;
+                            print(widget.user.profilePic);
+                            print(widget.user.fcsProfilePicPath);
+                          }
+                        }
+
+                        User user =
+                            await ProfileService.update_profile(widget.user);
+                        // ignore: use_build_context_synchronously
+                        print(user.name);
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(const SnackBar(
+                          content: Text("Profile Updated Successfully"),
+                        ));
+                      } catch (e) {
+                        print(e);
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(e.toString()),
+                        ));
+                      }
+                      setState(() {
+                        isLoading = false;
+                      });
+                      Navigator.pop(context);
+                    }
+                  },
+                  icon: const Icon(Icons.save),
+                ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -186,67 +267,6 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                     const SizedBox(
                       height: 18,
                     ),
-                    isLoading
-                        ? const CircularProgressIndicator()
-                        : ElevatedButton(
-                            onPressed: () async {
-                              print(await Preferences.getUser());
-                              if (formKey.currentState!.validate()) {
-                                setState(() {
-                                  isLoading = true;
-                                });
-                                try {
-                                  updateUserData();
-                                  String profile_pic = "";
-                                  String fcs_profile_pic_path = "";
-                                  if (image != null && picked_image != null) {
-                                    final storage = FirebaseStorage.instance;
-                                    fcs_profile_pic_path =
-                                        "profile_pics/teachers/${picked_image?.name}";
-                                    TaskSnapshot task = await storage
-                                        .ref(fcs_profile_pic_path)
-                                        .putData(image!);
-                                    if (task.state == TaskState.error) {
-                                      print("An error occured");
-                                    } else {
-                                      if (widget.user.fcsProfilePicPath != "") {
-                                        await storage
-                                            .ref(widget.user.fcsProfilePicPath)
-                                            .delete();
-                                      }
-                                      widget.user.profilePic =
-                                          await task.ref.getDownloadURL();
-                                      widget.user.fcsProfilePicPath =
-                                          fcs_profile_pic_path;
-                                      print(widget.user.profilePic);
-                                      print(widget.user.fcsProfilePicPath);
-                                    }
-                                  }
-
-                                  User user =
-                                      await ProfileService.update_profile(
-                                          widget.user);
-                                  // ignore: use_build_context_synchronously
-                                  print(user.name);
-                                  ScaffoldMessenger.of(context)
-                                      .showSnackBar(const SnackBar(
-                                    content:
-                                        Text("Profile Updated Successfully"),
-                                  ));
-                                } catch (e) {
-                                  print(e);
-                                  ScaffoldMessenger.of(context)
-                                      .showSnackBar(SnackBar(
-                                    content: Text(e.toString()),
-                                  ));
-                                }
-                                setState(() {
-                                  isLoading = false;
-                                });
-                              }
-                            },
-                            child: const Text("Update"),
-                          )
                   ],
                 ),
               ),
