@@ -13,52 +13,39 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // await Firebase.initializeApp();
 
   print("Handling a background message: ${message.messageId}");
-  await setupFlutterNotifications();
   showFlutterNotification(message);
 }
 
-late AndroidNotificationChannel channel;
-
-bool isFlutterLocalNotificationsInitialized = false;
-
-
-Future<void> setupFlutterNotifications() async {
-  if (isFlutterLocalNotificationsInitialized) {
-    return;
-  }
-  channel = const AndroidNotificationChannel(
-    'high_importance_channel', // id
-    'High Importance Notifications', // title
-    description:
-        'This channel is used for important notifications.', // description
-    importance: Importance.high,
-  );
-
-  flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-
-  /// Create an Android Notification Channel.
-  ///
-  /// We use this channel in the `AndroidManifest.xml` file to override the
-  /// default FCM channel to enable heads up notifications.
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(channel);
-
-  /// Update the iOS foreground notification presentation options to allow
-  /// heads up notifications.
-  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
-  isFlutterLocalNotificationsInitialized = true;
-}
-
-void showFlutterNotification(RemoteMessage message) {
+void showFlutterNotification(RemoteMessage message) async {
   RemoteNotification? notification = message.notification;
   AndroidNotification? android = message.notification?.android;
   if (notification != null && android != null) {
+    AndroidNotificationChannel channel = const AndroidNotificationChannel(
+      'high_importance_channel', // id
+      'High Importance Notifications', // title
+      description:
+      'This channel is used for important notifications.', // description
+      importance: Importance.high,
+    );
+
+    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+    /// Create an Android Notification Channel.
+    ///
+    /// We use this channel in the `AndroidManifest.xml` file to override the
+    /// default FCM channel to enable heads up notifications.
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+
+    /// Update the iOS foreground notification presentation options to allow
+    /// heads up notifications.
+    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
     flutterLocalNotificationsPlugin.show(
       notification.hashCode,
       notification.title,
@@ -70,7 +57,7 @@ void showFlutterNotification(RemoteMessage message) {
           channelDescription: channel.description,
           // // TODO add a proper drawable resource to android, for now using
           // //      one that already exists in example app.
-          // icon: 'launch_background',
+          icon: '@mipmap/ic_launcher',
         ),
       ),
     );
@@ -86,7 +73,6 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  await setupFlutterNotifications();
   runApp(MyApp());
 }
 
@@ -117,7 +103,7 @@ class _MyAppState extends State<MyApp> {
 
     print('User granted permission: ${settings.authorizationStatus}');
     if (settings.authorizationStatus == AuthorizationStatus.denied) {
-      requestNotificationPermission();
+      print("Notification permission denied");
     }
   }
 
@@ -137,7 +123,7 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) {
       // TODO: If necessary send token to application server.
-      print(fcmToken);
+      print("FCM TOKEN REFRESHED: $fcmToken");
       setState(() {
         token = fcmToken;
       });

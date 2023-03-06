@@ -1,18 +1,16 @@
-import 'dart:collection';
-
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../Models/Subject.dart';
-
 import '../Models/User.dart';
 import '../Services/TeacherHomeScreenService.dart';
 import '../preferences.dart';
 import 'ProfileScreen.dart';
-
-import 'package:cached_network_image/cached_network_image.dart';
+import 'SubjectDetailScreen.dart';
 
 class TeacherHomeScreen extends StatefulWidget {
   User user;
+
   TeacherHomeScreen(this.user);
 
   @override
@@ -33,8 +31,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
       subjects.clear();
     });
     try {
-      subjects = await TeacherHomeScreenService.get_subjects_list_for_teacher(
-          widget.user.token!, widget.user.id!);
+      subjects = await TeacherHomeScreenService.get_subjects_list_for_teacher();
     } catch (e) {
       setState(() {
         error = e.toString();
@@ -75,15 +72,13 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
         title: const Text("Home"),
         actions: [
           Container(
-            margin: const EdgeInsets.only(right: 10.0),
+            margin: const EdgeInsets.only(right: 10.0, top: 10, bottom: 10),
             child: InkWell(
               onTap: () async {
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ProfileScreen(
-                      widget.user,
-                    ),
+                    builder: (context) => const ProfileScreen(),
                   ),
                 );
                 User user = await Preferences.getUser();
@@ -130,7 +125,19 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: subjects.length,
                           itemBuilder: (context, index) {
-                            return buildSubjectCard(subjects[index]);
+                            return InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SubjectDetailScreen(
+                                      subject: subjects[index],
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: buildSubjectCard(subjects[index]),
+                            );
                           },
                         ),
                       ],
@@ -168,8 +175,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
             children: [
               Text(
                 "Name: ${subject.name}",
-                style: const TextStyle(
-                    overflow: TextOverflow.visible, fontSize: 18),
+                style: const TextStyle(fontSize: 18),
               ),
               const SizedBox(height: 15),
               Row(

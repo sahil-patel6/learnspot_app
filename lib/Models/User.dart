@@ -3,6 +3,7 @@ class User {
   String? id;
   String? name;
   String? email;
+  String? roll_number;
   String? phone;
   String? bio;
   String? address;
@@ -15,6 +16,7 @@ class User {
     required this.id,
     required this.name,
     required this.email,
+    this.roll_number,
     required this.phone,
     required this.bio,
     required this.address,
@@ -36,6 +38,7 @@ class User {
     fcsProfilePicPath = json['fcs_profile_pic_path'];
     fcmToken = json['fcm_token'];
     type_of_user = json['type_of_user'] ?? "";
+    roll_number = json['roll_number'] ?? "";
   }
 
   Map<String, dynamic> toJson() {
@@ -49,6 +52,7 @@ class User {
     data['profile_pic'] = profilePic;
     data['fcs_profile_pic_path'] = fcsProfilePicPath;
     data['fcm_token'] = fcmToken;
+    data['roll_number'] = roll_number;
     return data;
   }
 }
