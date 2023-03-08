@@ -1,31 +1,19 @@
 import 'dart:convert';
 
-import '../Models/User.dart';
-
 import 'package:http/http.dart' as http;
 
+import '../Models/User.dart';
 import '../preferences.dart';
 import '../utils/Api.dart';
 
 class SignInService {
-  static String getSignInUrl(String type_of_user) {
-    if (type_of_user == "Teacher") {
-      return API.TEACHER_SIGNIN_URL;
-    } else if (type_of_user == "Student") {
-      return API.STUDENT_SIGNIN_URL;
-    } else if (type_of_user == "Parent") {
-      return API.PARENT_SIGNIN_URL;
-    }
-    return "";
-  }
-
   static Future<User> sigin_in(
       {required String type_of_user,
       required String email,
       required String password,
       required String fcm_token}) async {
     final http.Response response = await http.post(
-      Uri.parse(getSignInUrl(type_of_user)),
+      Uri.parse(API.USER_SIGNIN_URL(type_of_user.toLowerCase())),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },

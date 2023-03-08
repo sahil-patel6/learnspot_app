@@ -1,18 +1,18 @@
 import 'dart:convert';
-
-import '../Models/Resource.dart';
+import '../Models/Notice.dart';
 import 'package:http/http.dart' as http;
 
 
+import '../Models/Semester.dart';
 import '../Models/User.dart';
 import '../preferences.dart';
 import '../utils/Api.dart';
 
-class ResourceService {
-  static Future<List<Resource>> get_resources(String subject_id) async {
+class NoticeService {
+  static Future<List<Notice>> get_notices(String semester_id) async {
     User user = await Preferences.getUser();
     final http.Response response = await http.get(
-      Uri.parse(API.GET_RESOURCES(subject_id,user.id!,(user.type_of_user?.toLowerCase())!)),
+      Uri.parse(API.GET_NOTICES(semester_id,user.id!,(user.type_of_user?.toLowerCase())!)),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Bearer ${user.token}'
@@ -20,79 +20,81 @@ class ResourceService {
     );
     if (response.statusCode == 200) {
       print(jsonDecode(response.body));
-      List<Resource> resources = [];
+      List<Notice> notices = [];
       try {
         jsonDecode(response.body).forEach((resource) {
-          resources.add(Resource.fromJson(resource));
+          notices.add(Notice.fromJson(resource));
         });
       } catch (e) {
         print(e);
       }
-      return resources;
+      return notices;
     } else {
       print(response.body);
       throw Exception(jsonDecode(response.body)["error"]);
     }
   }
 
-  static Future<Resource> create_resource(Resource resource) async {
+  static Future<Notice> create_notice(Notice notice,Semester semester) async {
     User user = await Preferences.getUser();
     final http.Response response = await http.post(
-      Uri.parse(API.CREATE_RESOURCE(user.id!)),
+        Uri.parse(API.CREATE_NOTICE(user.id!)),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer ${user.token}'
+        },
+        body: jsonEncode(notice.toJson())
+    );
+    if (response.statusCode == 200) {
+      print(jsonDecode(response.body));
+      Notice createdNotice = Notice();
+      try {
+        createdNotice = Notice.fromJson(jsonDecode(response.body));
+        print("PRINTING CREATED NOTICE");
+        print(jsonEncode(createdNotice.toJson()));
+      } catch (e) {
+        print(e);
+      }
+      return createdNotice;
+    } else {
+      print(response.body);
+      throw Exception(jsonDecode(response.body)["error"]);
+    }
+  }
+
+  static Future<Notice> update_notice(Notice notice) async {
+    User user = await Preferences.getUser();
+    final http.Response response = await http.put(
+        Uri.parse(API.UPDATE_NOTICE(notice.id!,user.id!)),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer ${user.token}'
+        },
+        body: jsonEncode(notice.toJson())
+    );
+    if (response.statusCode == 200) {
+      print(jsonDecode(response.body));
+      Notice updatedNotice = Notice();
+      try {
+        updatedNotice = Notice.fromJson(jsonDecode(response.body));
+      } catch (e) {
+        print(e);
+      }
+      return updatedNotice;
+    } else {
+      print(response.body);
+      throw Exception(jsonDecode(response.body)["error"]);
+    }
+  }
+
+  static Future<String> delete_notice(String notice_id) async {
+    User user = await Preferences.getUser();
+    final http.Response response = await http.delete(
+      Uri.parse(API.DELETE_NOTICE(notice_id,user.id!)),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Bearer ${user.token}'
       },
-      body: jsonEncode(resource.toJson())
-    );
-    if (response.statusCode == 200) {
-      print(jsonDecode(response.body));
-      Resource createdResource = Resource();
-      try {
-        createdResource = Resource.fromJson(jsonDecode(response.body));
-      } catch (e) {
-        print(e);
-      }
-      return createdResource;
-    } else {
-      print(response.body);
-      throw Exception(jsonDecode(response.body)["error"]);
-    }
-  }
-
-  static Future<Resource> update_resource(Resource resource) async {
-    User user = await Preferences.getUser();
-    final http.Response response = await http.put(
-        Uri.parse(API.UPDATE_RESOURCE(resource.id!,user.id!)),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer ${user.token}'
-        },
-        body: jsonEncode(resource.toJson())
-    );
-    if (response.statusCode == 200) {
-      print(jsonDecode(response.body));
-      Resource updatedResource = Resource();
-      try {
-        updatedResource = Resource.fromJson(jsonDecode(response.body));
-      } catch (e) {
-        print(e);
-      }
-      return updatedResource;
-    } else {
-      print(response.body);
-      throw Exception(jsonDecode(response.body)["error"]);
-    }
-  }
-
-  static Future<String> delete_resource(String resource_id) async {
-    User user = await Preferences.getUser();
-    final http.Response response = await http.delete(
-        Uri.parse(API.DELETE_RESOURCE(resource_id,user.id!)),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-          'Authorization': 'Bearer ${user.token}'
-        },
     );
     if (response.statusCode == 200) {
       print(jsonDecode(response.body));

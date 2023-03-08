@@ -4,51 +4,51 @@ import 'package:file_icon/file_icon.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:filesize/filesize.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:lms_app/Models/Subject.dart';
-import 'package:lms_app/Services/ResourceService.dart';
+import 'package:lms_app/Services/NoticeService.dart';
 import 'package:lms_app/utils/showLoaderDialog.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:validatorless/validatorless.dart';
 
-import '../Models/Resource.dart';
+import '../../Models/FileData.dart';
+import '../../Models/Notice.dart';
 
-class UpdateResourceScreen extends StatefulWidget {
+class UpdateNoticeScreen extends StatefulWidget {
   final Subject subject;
-  final Resource resource;
+  final Notice notice;
 
-  const UpdateResourceScreen(this.subject, this.resource, {Key? key})
+  const UpdateNoticeScreen(this.subject, this.notice, {Key? key})
       : super(key: key);
 
   @override
-  State<UpdateResourceScreen> createState() => _UpdateResourceScreenState();
+  State<UpdateNoticeScreen> createState() => _UpdateNoticeScreenState();
 }
 
-class _UpdateResourceScreenState extends State<UpdateResourceScreen> {
+class _UpdateNoticeScreenState extends State<UpdateNoticeScreen> {
   bool isLoading = false;
 
   TextEditingController titleController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
 
   List<PlatformFile> _pickedFiles = [];
-  List<ResourceFile> deletedFiles = [];
+  List<FileData> deletedFiles = [];
 
   final formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
-    titleController.text = widget.resource.title ?? "";
-    descriptionController.text = widget.resource.description ?? "";
+    titleController.text = widget.notice.title ?? "";
+    descriptionController.text = widget.notice.description ?? "";
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Update Resource"),
+        title: const Text("Update Notice"),
         actions: [
           if (isLoading)
             Center(
@@ -66,59 +66,57 @@ class _UpdateResourceScreenState extends State<UpdateResourceScreen> {
               onPressed: () async {
                 if (formKey.currentState!.validate() &&
                     (_pickedFiles.isNotEmpty ||
-                        (widget.resource.files?.isNotEmpty)!)) {
-                  setState(() {
-                    isLoading = true;
-                  });
-                  final storage = FirebaseStorage.instance;
-                  for (var deletedFile in deletedFiles) {
-                    await storage.ref(deletedFile.fcsPath).delete();
-                  }
-                  widget.resource.title = titleController.text;
-                  widget.resource.description = descriptionController.text;
-
-                  // Resource resource = Resource(
-                  //   title: titleController.text,
-                  //   description: descriptionController.text,
-                  //   subject: widget.subject.id,
-                  //   files: [],
-                  // );
-                  String fcs_path = "";
-                  for (var file in _pickedFiles) {
-                    fcs_path =
-                        "resources/${DateTime.now().toIso8601String()}.${file.extension}";
-                    TaskSnapshot task =
-                        await storage.ref(fcs_path).putFile(File(file.path!));
-                    if (task.state == TaskState.error) {
-                      print("An error occurred");
-                    } else {
-                      String downloadUrl = await task.ref.getDownloadURL();
-                      widget.resource.files?.add(
-                        ResourceFile(
-                          nameOfFile: file.name,
-                          typeOfFile: ".${file.extension}",
-                          sizeOfFile: file.size,
-                          downloadUrl: downloadUrl,
-                          fcsPath: fcs_path,
-                        ),
-                      );
+                        (widget.notice.files?.isNotEmpty)!)) {
+                  try {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    final storage = FirebaseStorage.instance;
+                    for (var deletedFile in deletedFiles) {
+                      await storage.ref(deletedFile.fcsPath).delete();
                     }
+                    widget.notice.title = titleController.text;
+                    widget.notice.description = descriptionController.text;
+
+                    String fcs_path = "";
+                    for (var file in _pickedFiles) {
+                      fcs_path =
+                      "notices/${DateTime.now().toIso8601String()}.${file.extension}";
+                      TaskSnapshot task =
+                      await storage.ref(fcs_path).putFile(File(file.path!));
+                      if (task.state == TaskState.error) {
+                        print("An error occurred");
+                      } else {
+                        String downloadUrl = await task.ref.getDownloadURL();
+                        widget.notice.files?.add(
+                          FileData(
+                            nameOfFile: file.name,
+                            typeOfFile: ".${file.extension}",
+                            sizeOfFile: file.size,
+                            downloadUrl: downloadUrl,
+                            fcsPath: fcs_path,
+                          ),
+                        );
+                      }
+                    }
+                    Notice updatedNotice =
+                    await NoticeService.update_notice(widget.notice);
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Resource Updated Successfully"),
+                      ),
+                    );
+                    setState(() {
+                      isLoading = false;
+                    });
+                    Navigator.pop(context, updatedNotice);
+                  } catch (e) {
+                    print(e);
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(e.toString()),
+                    ));
                   }
-                  Resource updatedResource =
-                      await ResourceService.update_resource(widget.resource);
-                  // ignore: use_build_context_synchronously
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Resource Updated Successfully"),
-                    ),
-                  );
-                  setState(() {
-                    isLoading = false;
-                    titleController.text = "";
-                    descriptionController.text = "";
-                    _pickedFiles.clear();
-                  });
-                  Navigator.pop(context, updatedResource);
                 }
               },
               icon: const Icon(Icons.save),
@@ -166,11 +164,11 @@ class _UpdateResourceScreenState extends State<UpdateResourceScreen> {
 
                 /// displaying list of files we got from resource screen
                 ListView.builder(
-                  itemCount: widget.resource.files?.length,
+                  itemCount: widget.notice.files?.length,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemBuilder: (context, index) => buildFileCard(
-                    resourceFile: widget.resource.files![index],
+                    resourceFile: widget.notice.files![index],
                   ),
                 ),
 
@@ -206,7 +204,7 @@ class _UpdateResourceScreenState extends State<UpdateResourceScreen> {
     );
   }
 
-  buildFileCard({PlatformFile? file, ResourceFile? resourceFile}) {
+  buildFileCard({PlatformFile? file, FileData? resourceFile}) {
     String name_of_file = "";
     String size_of_file = "";
     String type_of_file = "";
@@ -280,7 +278,7 @@ class _UpdateResourceScreenState extends State<UpdateResourceScreen> {
                 if (file != null) {
                   _pickedFiles.remove(file);
                 } else {
-                  widget.resource.files?.remove(resourceFile);
+                  widget.notice.files?.remove(resourceFile);
                   deletedFiles.add(resourceFile!);
                 }
               });

@@ -97,9 +97,13 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : subjects.isEmpty
-              ? const Center(
-                  child: Text("No subjects Found"),
-                )
+              ? error.isEmpty
+                  ? const Center(
+                      child: Text("No subjects Found"),
+                    )
+                  : Center(
+                      child: Text(error),
+                    )
               : SingleChildScrollView(
                   child: Padding(
                     padding: const EdgeInsets.only(
@@ -174,7 +178,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Name: ${subject.name}",
+                subject.name ?? "",
                 style: const TextStyle(fontSize: 18),
               ),
               const SizedBox(height: 15),

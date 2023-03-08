@@ -6,31 +6,10 @@ import '../preferences.dart';
 import '../utils/Api.dart';
 
 class ProfileService {
-  static String getProfileUpdateURL(String type_of_user, String user_id) {
-    if (type_of_user == "Teacher") {
-      return API.TEACHER_UPDATE_PROFILE_URL(user_id);
-    } else if (type_of_user == "Student") {
-      return API.STUDENT_UPDATE_PROFILE_URL(user_id);
-    } else if (type_of_user == "Parent") {
-      return API.PARENT_UPDATE_PROFILE_URL(user_id);
-    }
-    return "";
-  }
-
-  static String getProfileURL(String type_of_user, String user_id) {
-    if (type_of_user == "Teacher") {
-      return API.TEACHER_GET_PROFILE_URL(user_id);
-    } else if (type_of_user == "Student") {
-      return API.STUDENT_GET_PROFILE_URL(user_id);
-    } else if (type_of_user == "Parent") {
-      return API.PARENT_GET_PROFILE_URL(user_id);
-    }
-    return "";
-  }
 
   static Future<User> update_profile(User user) async {
     final http.Response response = await http.put(
-      Uri.parse(getProfileUpdateURL(user.type_of_user!,user.id!)),
+      Uri.parse(API.USER_UPDATE_PROFILE_URL(user.id!,(user.type_of_user?.toLowerCase())!)),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Bearer ${user.token!}'
@@ -52,7 +31,7 @@ class ProfileService {
   static Future<User> get_profile() async {
     User user = await Preferences.getUser();
     final http.Response response = await http.get(
-      Uri.parse(getProfileURL(user.type_of_user!,user.id!)),
+      Uri.parse(API.GET_USER_PROFILE_URL(user.id!,(user.type_of_user?.toLowerCase())!)),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Bearer ${user.token!}'

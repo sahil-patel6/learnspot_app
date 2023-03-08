@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lms_app/Models/Subject.dart';
-import 'package:lms_app/Screens/ResourcesScreen.dart';
+import 'package:lms_app/Screens/Assignment/AssignmentsScreen.dart';
+import 'package:lms_app/Screens/Notice/NoticesScreen.dart';
+import 'package:lms_app/Screens/Resource/ResourcesScreen.dart';
 
 class SubjectDetailScreen extends StatefulWidget {
   final Subject subject;
@@ -36,15 +38,47 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
                   },
                   child: buildCard("Resources"),
                 ),
-                const SizedBox(height: 18,),
+                const SizedBox(
+                  height: 18,
+                ),
                 InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            AssignmentsScreen(subject: widget.subject),
+                      ),
+                    );
+                  },
                   child: buildCard("Assignments"),
                 ),
-                const SizedBox(height: 18,),
+                const SizedBox(
+                  height: 18,
+                ),
                 InkWell(
                   child: buildCard("Attendance"),
                 ),
-                const SizedBox(height: 18,),
+                const SizedBox(
+                  height: 18,
+                ),
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            NoticesScreen(subject: widget.subject),
+                      ),
+                    );
+                  },
+                  child: buildCard(
+                    "Notices (${widget.subject.semester?.department?.name}) (${widget.subject.semester?.name})",
+                  ),
+                ),
+                const SizedBox(
+                  height: 18,
+                ),
               ],
             ),
           ),
