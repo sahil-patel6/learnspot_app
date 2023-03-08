@@ -4,31 +4,31 @@ import 'package:file_icon/file_icon.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:filesize/filesize.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lms_app/Models/Subject.dart';
 import 'package:lms_app/Services/ResourceService.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:validatorless/validatorless.dart';
 
-import '../Models/Resource.dart';
+import '../../Models/FileData.dart';
+import '../../Models/Resource.dart';
 
-class AddResourcesScreen extends StatefulWidget {
+class AddResourceScreen extends StatefulWidget {
   final Subject subject;
 
-  const AddResourcesScreen(this.subject, {Key? key}) : super(key: key);
+  const AddResourceScreen(this.subject, {Key? key}) : super(key: key);
 
   @override
-  State<AddResourcesScreen> createState() => _AddResourcesScreenState();
+  State<AddResourceScreen> createState() => _AddResourceScreenState();
 }
 
-class _AddResourcesScreenState extends State<AddResourcesScreen> {
+class _AddResourceScreenState extends State<AddResourceScreen> {
   bool isLoading = false;
 
   TextEditingController titleController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
 
-  List<PlatformFile> _pickedFiles = [];
+  List<PlatformFile> pickedFiles = [];
 
   final formKey = GlobalKey<FormState>();
 
@@ -36,7 +36,7 @@ class _AddResourcesScreenState extends State<AddResourcesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Add Resources"),
+        title: const Text("Add Resource"),
         actions: [
           if (isLoading)
             Center(
@@ -53,53 +53,60 @@ class _AddResourcesScreenState extends State<AddResourcesScreen> {
             IconButton(
               onPressed: () async {
                 if (formKey.currentState!.validate() &&
-                    _pickedFiles.isNotEmpty) {
-                  setState(() {
-                    isLoading = true;
-                  });
-                  Resource resource = Resource(
-                    title: titleController.text,
-                    description: descriptionController.text,
-                    subject: widget.subject.id,
-                    files: [],
-                  );
-                  final storage = FirebaseStorage.instance;
-                  String fcs_path = "";
-                  for (var file in _pickedFiles) {
-                    fcs_path =
-                        "resources/${DateTime.now().toIso8601String()}.${file.extension}";
-                    TaskSnapshot task =
-                        await storage.ref(fcs_path).putFile(File(file.path!));
-                    if (task.state == TaskState.error) {
-                      print("An error occurred");
-                    } else {
-                      String download_url = await task.ref.getDownloadURL();
-                      resource.files?.add(
-                        ResourceFile(
-                          nameOfFile: file.name,
-                          typeOfFile: ".${file.extension}",
-                          sizeOfFile: file.size,
-                          downloadUrl: download_url,
-                          fcsPath: fcs_path,
-                        ),
-                      );
+                    pickedFiles.isNotEmpty) {
+                  try {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    Resource resource = Resource(
+                      title: titleController.text,
+                      description: descriptionController.text,
+                      subject: widget.subject.id,
+                      files: [],
+                    );
+                    final storage = FirebaseStorage.instance;
+                    String fcs_path = "";
+                    for (var file in pickedFiles) {
+                      fcs_path =
+                          "resources/${DateTime.now().toIso8601String()}.${file.extension}";
+                      TaskSnapshot task =
+                          await storage.ref(fcs_path).putFile(File(file.path!));
+                      if (task.state == TaskState.error) {
+                        print("An error occurred");
+                      } else {
+                        String download_url = await task.ref.getDownloadURL();
+                        resource.files?.add(
+                          FileData(
+                            nameOfFile: file.name,
+                            typeOfFile: ".${file.extension}",
+                            sizeOfFile: file.size,
+                            downloadUrl: download_url,
+                            fcsPath: fcs_path,
+                          ),
+                        );
+                      }
                     }
+                    Resource createdResource =
+                        await ResourceService.create_resource(resource);
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Resource Created Successfully"),
+                      ),
+                    );
+                    setState(() {
+                      isLoading = false;
+                      titleController.text = "";
+                      descriptionController.text = "";
+                      pickedFiles.clear();
+                    });
+                    Navigator.pop(context, createdResource);
+                  } catch (e) {
+                    print(e);
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(e.toString()),
+                    ));
                   }
-                  Resource createdResource =
-                      await ResourceService.create_resource(resource);
-                  // ignore: use_build_context_synchronously
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Resource Created Successfully"),
-                    ),
-                  );
-                  setState(() {
-                    isLoading = false;
-                    titleController.text = "";
-                    descriptionController.text = "";
-                    _pickedFiles.clear();
-                  });
-                  Navigator.pop(context,createdResource);
                 }
               },
               icon: const Icon(Icons.save),
@@ -119,7 +126,7 @@ class _AddResourcesScreenState extends State<AddResourcesScreen> {
                   validator: Validatorless.multiple([
                     Validatorless.required('Title is required'),
                     Validatorless.min(
-                        3, 'Title should atleast contain 3 characters'),
+                        3, 'Title should be atleast contain 3 characters'),
                   ]),
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
@@ -140,16 +147,18 @@ class _AddResourcesScreenState extends State<AddResourcesScreen> {
                     hintText: "Description:",
                     labelText: "Description:",
                   ),
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
                 ),
                 const SizedBox(
                   height: 18,
                 ),
                 ListView.builder(
-                  itemCount: _pickedFiles.length,
+                  itemCount: pickedFiles.length,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemBuilder: (context, index) => buildFileCard(
-                    _pickedFiles[index],
+                    pickedFiles[index],
                   ),
                 ),
                 ElevatedButton(
@@ -158,8 +167,8 @@ class _AddResourcesScreenState extends State<AddResourcesScreen> {
                         .pickFiles(allowMultiple: true);
 
                     if (result != null) {
-                      _pickedFiles.addAll(result.files);
-                      print(_pickedFiles.length);
+                      pickedFiles.addAll(result.files);
+                      print(pickedFiles.length);
                       setState(() {});
                     } else {
                       // User canceled the picker
@@ -224,7 +233,7 @@ class _AddResourcesScreenState extends State<AddResourcesScreen> {
           IconButton(
             onPressed: () {
               setState(() {
-                _pickedFiles.remove(file);
+                pickedFiles.remove(file);
               });
             },
             icon: const Icon(Icons.delete_rounded),

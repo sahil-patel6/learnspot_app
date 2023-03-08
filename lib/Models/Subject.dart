@@ -1,3 +1,5 @@
+import 'Semester.dart';
+
 class Subject {
   String? id;
   String? name;
@@ -35,57 +37,6 @@ class Subject {
     if (semester != null) {
       data['semester'] = semester!.toJson();
     }
-    return data;
-  }
-}
-
-class Semester {
-  String? id;
-  String? name;
-  Department? department;
-
-  Semester({this.id, this.name, this.department});
-
-  Semester.fromJson(Map<String, dynamic> json) {
-    id = json['_id'];
-    name = json['name'];
-    department = json['department'] != null
-        ? Department.fromJson(json['department'])
-        : null;
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['_id'] = id;
-    data['name'] = name;
-    if (department != null) {
-      data['department'] = department!.toJson();
-    }
-    return data;
-  }
-}
-
-class Department {
-  String? id;
-  String? name;
-  String? description;
-  int? totalYears;
-
-  Department({this.id, this.name, this.description, this.totalYears});
-
-  Department.fromJson(Map<String, dynamic> json) {
-    id = json['_id'];
-    name = json['name'];
-    description = json['description'];
-    totalYears = json['total_years'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['_id'] = id;
-    data['name'] = name;
-    data['description'] = description;
-    data['total_years'] = totalYears;
     return data;
   }
 }

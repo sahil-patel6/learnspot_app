@@ -1,6 +1,5 @@
 import 'package:file_icon/file_icon.dart';
 import 'package:filesize/filesize.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:lms_app/Models/Resource.dart';
@@ -9,9 +8,10 @@ import 'package:lms_app/Services/ResourceService.dart';
 import 'package:lms_app/preferences.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 
-import '../Models/User.dart';
-import '../utils/showLoaderDialog.dart';
-import 'AddResourcesScreen.dart';
+import '../../Models/FileData.dart';
+import '../../Models/User.dart';
+import '../../utils/showLoaderDialog.dart';
+import 'AddResourceScreen.dart';
 import 'UpdateResourceScreen.dart';
 
 class ResourcesScreen extends StatefulWidget {
@@ -31,13 +31,13 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
   List<Resource> resources = [];
 
   getData() async {
-    user = await Preferences.getUser();
     setState(() {
       isLoading = true;
       error = "";
       resources.clear();
     });
     try {
+      user = await Preferences.getUser();
       resources = await ResourceService.get_resources(widget.subject.id!);
       print(resources);
     } catch (e) {
@@ -94,12 +94,12 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
         title: const Text("All Resources"),
       ),
       body: buildBody(),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: user != null && user?.type_of_user == "Teacher" ? FloatingActionButton(
         onPressed: () async {
           Resource? resource = await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AddResourcesScreen(widget.subject),
+              builder: (context) => AddResourceScreen(widget.subject),
             ),
           );
           if (resource != null) {
@@ -109,7 +109,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
           }
         },
         child: const Icon(Icons.add),
-      ),
+      ) : null,
     );
   }
 
@@ -201,7 +201,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
     });
   }
 
-  buildFileCard(ResourceFile resourceFile) {
+  buildFileCard(FileData resourceFile) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
