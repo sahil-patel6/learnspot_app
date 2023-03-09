@@ -1,10 +1,9 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:validatorless/validatorless.dart';
 
 import '../Models/User.dart';
 import '../Services/SignInService.dart';
-import 'package:validatorless/validatorless.dart';
-
 import 'ParentHomeScreen.dart';
 import 'StudentHomeScreen.dart';
 import 'TeacherHomeScreen.dart';
@@ -23,19 +22,31 @@ class _SignInScreenState extends State<SignInScreen> {
   bool isLoading = false;
   final type_of_user = ["Teacher", "Student", "Parent"];
   String _currentSelectedValue = "Teacher";
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // backgroundColor: Colors.greenAccent,
+      backgroundColor: Colors.white,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 18.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const FlutterLogo(
-                size: 100,
-                style: FlutterLogoStyle.stacked,
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(200),
+                  color: Colors.white10,
+                ),
+                child: Image.asset(
+                  "assets/images/learnspot_logo.png",
+                  height: 150,
+                  width: 150,
+                ),
+              ),
+              const Text(
+                "Welcome to LearnSpot",
+                style: TextStyle(fontSize: 18),
               ),
               const SizedBox(
                 height: 18,
@@ -119,7 +130,11 @@ class _SignInScreenState extends State<SignInScreen> {
                           String fcm_token =
                               await FirebaseMessaging.instance.getToken() ?? "";
                           try {
-                            User user = await SignInService.sigin_in(type_of_user: _currentSelectedValue, email: emailController.text, password: passwordController.text, fcm_token: fcm_token);
+                            User user = await SignInService.sigin_in(
+                                type_of_user: _currentSelectedValue,
+                                email: emailController.text,
+                                password: passwordController.text,
+                                fcm_token: fcm_token);
                             print(user.name);
                             if (user.type_of_user == "Teacher") {
                               // ignore: use_build_context_synchronously
@@ -130,7 +145,6 @@ class _SignInScreenState extends State<SignInScreen> {
                                           TeacherHomeScreen(user)),
                                   (route) => false);
                             } else if (user.type_of_user == "Student") {
-                        
                               // ignore: use_build_context_synchronously
                               Navigator.pushAndRemoveUntil(
                                   context,
@@ -139,7 +153,6 @@ class _SignInScreenState extends State<SignInScreen> {
                                           StudentHomeScreen(user)),
                                   (route) => false);
                             } else if (user.type_of_user == "Parent") {
-                              
                               // ignore: use_build_context_synchronously
                               Navigator.pushAndRemoveUntil(
                                   context,

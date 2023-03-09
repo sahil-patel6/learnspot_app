@@ -5,33 +5,32 @@ import 'package:file_picker/file_picker.dart';
 import 'package:filesize/filesize.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:lms_app/Models/Subject.dart';
-import 'package:lms_app/Services/NoticeService.dart';
+import 'package:lms_app/Services/AssignmentSubmissionService.dart';
 import 'package:open_file_plus/open_file_plus.dart';
-import 'package:validatorless/validatorless.dart';
 
+import '../../Models/Assignment.dart';
+import '../../Models/AssignmentSubmission.dart';
 import '../../Models/FileData.dart';
-import '../../Models/Notice.dart';
+import '../../Models/Child.dart';
+import '../../Models/User.dart';
 
-class AddNoticeScreen extends StatefulWidget {
-  final String semester_id;
+class AddAssignmentSubmissionScreen extends StatefulWidget {
+  final Assignment assignment;
+  final User user;
 
-  const AddNoticeScreen(this.semester_id, {Key? key}) : super(key: key);
+  const AddAssignmentSubmissionScreen({Key? key,required this.assignment,required this.user}) : super(key: key);
 
   @override
-  State<AddNoticeScreen> createState() => _AddNoticeScreenState();
+  State<AddAssignmentSubmissionScreen> createState() => _AddAssignmentSubmissionScreenState();
 }
 
-class _AddNoticeScreenState extends State<AddNoticeScreen> {
+class _AddAssignmentSubmissionScreenState extends State<AddAssignmentSubmissionScreen> {
   bool isLoading = false;
 
-  TextEditingController titleController = TextEditingController();
+  TextEditingController commentsController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
 
   List<PlatformFile> pickedFiles = [];
-
-  final type_of_notice = ['Announcement', 'Timetable', 'Result'];
-  String _currentSelectedValue = "Announcement";
 
   final formKey = GlobalKey<FormState>();
 
@@ -39,7 +38,7 @@ class _AddNoticeScreenState extends State<AddNoticeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Add Notice"),
+        title: const Text("Add Submission"),
         actions: [
           if (isLoading)
             Center(
@@ -55,30 +54,30 @@ class _AddNoticeScreenState extends State<AddNoticeScreen> {
           else
             IconButton(
               onPressed: () async {
-                if (formKey.currentState!.validate()) {
+                if (formKey.currentState!.validate() &&
+                    pickedFiles.isNotEmpty) {
                   try {
                     setState(() {
                       isLoading = true;
                     });
-                    Notice notice = Notice(
-                      title: titleController.text,
-                      description: descriptionController.text,
-                      semester: widget.semester_id,
-                      files: [],
-                      type: _currentSelectedValue,
+                    AssignmentSubmission assignment_submission = AssignmentSubmission(
+                      assignment: widget.assignment.id,
+                      comments:  commentsController.text,
+                      student: Student(id: widget.user.id),
+                      submission: []
                     );
                     final storage = FirebaseStorage.instance;
                     String fcs_path = "";
                     for (var file in pickedFiles) {
                       fcs_path =
-                          "notices/${DateTime.now().toIso8601String()}.${file.extension}";
+                      "assignment_submissions/${DateTime.now().toIso8601String()}.${file.extension}";
                       TaskSnapshot task =
-                          await storage.ref(fcs_path).putFile(File(file.path!));
+                      await storage.ref(fcs_path).putFile(File(file.path!));
                       if (task.state == TaskState.error) {
                         print("An error occurred");
                       } else {
                         String download_url = await task.ref.getDownloadURL();
-                        notice.files?.add(
+                        assignment_submission.submission?.add(
                           FileData(
                             nameOfFile: file.name,
                             typeOfFile: ".${file.extension}",
@@ -89,26 +88,26 @@ class _AddNoticeScreenState extends State<AddNoticeScreen> {
                         );
                       }
                     }
-                    Notice createdNotice = await NoticeService.create_notice(
-                        notice);
+                    AssignmentSubmission createdAssignmentSubmission =
+                    await AssignmentSubmissionService.create_assignment_submission(assignment_submission);
                     // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text("Notice Created Successfully"),
+                        content: Text("Assignment Submitted Successfully"),
                       ),
                     );
                     setState(() {
                       isLoading = false;
-                      titleController.text = "";
-                      descriptionController.text = "";
+                      commentsController.text = "";
                       pickedFiles.clear();
                     });
-                    Navigator.pop(context, createdNotice);
+                    Navigator.pop(context, createdAssignmentSubmission);
                   } catch (e) {
                     print(e);
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text(e.toString()),
                     ));
+
                     setState(() {
                       isLoading = false;
                     });
@@ -128,65 +127,12 @@ class _AddNoticeScreenState extends State<AddNoticeScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextFormField(
-                  controller: titleController,
-                  validator: Validatorless.multiple([
-                    Validatorless.required('Title is required'),
-                    Validatorless.min(
-                        3, 'Title should be atleast contain 3 characters'),
-                  ]),
+                  controller: commentsController,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    hintText: "Title:",
-                    labelText: "Title:",
+                    hintText: "Comments:",
+                    labelText: "Comments:",
                   ),
-                ),
-                const SizedBox(height: 18),
-                TextFormField(
-                  controller: descriptionController,
-                  validator: Validatorless.multiple([
-                    Validatorless.required('Description is required'),
-                    Validatorless.between(
-                        10, 150, 'Please Enter between 10 and 150 characters')
-                  ]),
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: "Description:",
-                    labelText: "Description:",
-                  ),
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
-                ),
-                const SizedBox(
-                  height: 18,
-                ),
-                FormField<String>(
-                  builder: (FormFieldState<String> state) {
-                    return InputDecorator(
-                      decoration: InputDecoration(
-                          hintText: 'Please select type of notice',
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(5.0))),
-                      isEmpty: _currentSelectedValue == '',
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _currentSelectedValue,
-                          isDense: true,
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              _currentSelectedValue =
-                                  newValue ?? "Announcement";
-                            });
-                          },
-                          items: type_of_notice.map((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                    );
-                  },
                 ),
                 const SizedBox(
                   height: 18,

@@ -2,43 +2,49 @@ import 'package:file_icon/file_icon.dart';
 import 'package:filesize/filesize.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:lms_app/Models/Resource.dart';
-import 'package:lms_app/Models/Subject.dart';
-import 'package:lms_app/Services/ResourceService.dart';
+import 'package:intl/intl.dart';
+import 'package:lms_app/Models/AssignmentSubmission.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 
+import '../../Models/Assignment.dart';
 import '../../Models/FileData.dart';
 import '../../Models/User.dart';
+import '../../Services/AssignmentSubmissionService.dart';
 import '../../utils/showLoaderDialog.dart';
-import 'AddResourceScreen.dart';
-import 'UpdateResourceScreen.dart';
+import 'AddAssignmentSubmissionScreen.dart';
+import 'UpdateAssignmentSubmission.dart';
 
-class ResourcesScreen extends StatefulWidget {
-  final Subject subject;
+class AssignmentSubmissionScreen extends StatefulWidget {
+  final Assignment assignment;
   final User user;
 
-  const ResourcesScreen({Key? key, required this.subject, required this.user})
+  const AssignmentSubmissionScreen(
+      {Key? key, required this.assignment, required this.user})
       : super(key: key);
 
   @override
-  State<ResourcesScreen> createState() => _ResourcesScreenState();
+  State<AssignmentSubmissionScreen> createState() =>
+      _AssignmentSubmissionScreenState();
 }
 
-class _ResourcesScreenState extends State<ResourcesScreen> {
+class _AssignmentSubmissionScreenState
+    extends State<AssignmentSubmissionScreen> {
   bool isLoading = false;
   String error = "";
 
-  List<Resource> resources = [];
+  List<AssignmentSubmission> assignment_submissions = [];
 
   getData() async {
     setState(() {
       isLoading = true;
       error = "";
-      resources.clear();
+      assignment_submissions.clear();
     });
     try {
-      resources = await ResourceService.get_resources(widget.subject.id!);
-      print(resources);
+      assignment_submissions =
+          await AssignmentSubmissionService.get_assignment_submissions(
+              widget.assignment.id!);
+      print(assignment_submissions);
     } catch (e) {
       setState(() {
         error = e.toString();
@@ -61,10 +67,10 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
         child: CircularProgressIndicator(),
       );
     } else {
-      if (resources.isEmpty) {
+      if (assignment_submissions.isEmpty) {
         if (error.isEmpty) {
           return const Center(
-            child: Text("No resources found"),
+            child: Text("No assignment submissions found"),
           );
         } else {
           return Center(
@@ -76,9 +82,10 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
           padding: const EdgeInsets.only(top: 18.0, left: 18, right: 18),
           child: ListView.builder(
             shrinkWrap: true,
-            itemCount: resources.length,
+            itemCount: assignment_submissions.length,
             itemBuilder: (context, index) {
-              return buildResourceCard(resources[index]);
+              return buildAssignmentSubmissionCard(
+                  assignment_submissions[index]);
             },
           ),
         );
@@ -90,23 +97,31 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("All Resources"),
+        title: Text(
+          widget.user.type_of_user == "Teacher"
+              ? "All Assignment Submissions"
+              : "Your Assignment Submission",
+        ),
       ),
       body: buildBody(),
-      floatingActionButton: widget.user.type_of_user == "Teacher"
+      floatingActionButton: widget.user.type_of_user == "Student" &&
+              !isLoading &&
+              assignment_submissions.isEmpty
           ? FloatingActionButton(
               onPressed: () async {
-                Resource? resource = await Navigator.push(
+                AssignmentSubmission? assignment_submission =
+                    await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AddResourceScreen(
-                      subject: widget.subject,
+                    builder: (context) => AddAssignmentSubmissionScreen(
+                      assignment: widget.assignment,
+                      user: widget.user,
                     ),
                   ),
                 );
-                if (resource != null) {
+                if (assignment_submission != null) {
                   setState(() {
-                    resources.add(resource);
+                    assignment_submissions.add(assignment_submission);
                   });
                 }
               },
@@ -116,7 +131,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
     );
   }
 
-  buildResourceCardRow(String title, String text) {
+  buildAssignmentSubmissionCardRow(String title, String text) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.start,
@@ -138,7 +153,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
     );
   }
 
-  buildResourceCard(Resource resource) {
+  buildAssignmentSubmissionCard(AssignmentSubmission assignment_submission) {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
@@ -149,48 +164,80 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          buildResourceCardRow("Title:  ", resource.title!),
+          buildAssignmentSubmissionCardRow(
+              "Comments:  ", assignment_submission.comments!),
           const SizedBox(
             height: 10,
           ),
-          buildResourceCardRow("Description:  ", resource.description!),
+          buildAssignmentSubmissionCardRow(
+            "Submission Date:  ",
+            DateFormat("dd MMM, yyyy, HH:mm").format(
+              DateTime.parse(
+                assignment_submission.submissionDate!,
+              ).toLocal(),
+            ),
+          ),
+          if (widget.user.type_of_user != "Student")
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(
+                  height: 10,
+                ),
+                buildAssignmentSubmissionCardRow(
+                  "Submitted By:  ",
+                  assignment_submission.student?.name ?? "",
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                buildAssignmentSubmissionCardRow(
+                  "Roll No:  ",
+                  assignment_submission.student?.rollNumber ?? "",
+                ),
+              ],
+            ),
           const SizedBox(
             height: 10,
           ),
           ListView.builder(
             physics: const NeverScrollableScrollPhysics(),
             shrinkWrap: true,
-            itemCount: resource.files?.length,
+            itemCount: assignment_submission.submission?.length,
             itemBuilder: (context, index) => Column(
               children: [
                 buildFileCard(
-                  resource.files![index],
+                  assignment_submission.submission![index],
                 ),
               ],
             ),
           ),
-          if (widget.user.type_of_user == "Teacher")
+          if (widget.user.type_of_user == "Student")
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 ElevatedButton(
                   onPressed: () async {
-                    Resource? updatedResource = await Navigator.push(
+                    AssignmentSubmission? updatedAssignmentSubmission =
+                        await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            UpdateResourceScreen(resource: resource),
+                        builder: (context) => UpdateAssignmentSubmissionScreen(
+                          assignment_submission: assignment_submission,
+                        ),
                       ),
                     );
-                    if (updatedResource != null) {
+                    if (updatedAssignmentSubmission != null) {
                       setState(() {
-                        resource = updatedResource;
+                        assignment_submission = updatedAssignmentSubmission;
                       });
                     }
                   },
                   child: const Text("Update"),
                 ),
-                DeleteResourceButton(resource, removeResource),
+                DeleteAssignmentSubmissionButton(
+                    assignment_submission, removeAssignmentSubmission),
               ],
             )
         ],
@@ -198,13 +245,13 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
     );
   }
 
-  removeResource(Resource resource) {
+  removeAssignmentSubmission(AssignmentSubmission assignment_submission) {
     setState(() {
-      resources.remove(resource);
+      assignment_submissions.remove(assignment_submission);
     });
   }
 
-  buildFileCard(FileData resourceFile) {
+  buildFileCard(FileData assignment_submission_file) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
@@ -219,14 +266,14 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
               onTap: () async {
                 showLoaderDialog(context);
                 var file = await DefaultCacheManager()
-                    .getSingleFile(resourceFile.downloadUrl!);
+                    .getSingleFile(assignment_submission_file.downloadUrl!);
                 Navigator.pop(context);
                 OpenFile.open(file.path);
               },
               child: Row(
                 children: [
                   FileIcon(
-                    ".${resourceFile.typeOfFile}",
+                    ".${assignment_submission_file.typeOfFile}",
                     size: 45,
                   ),
                   Flexible(
@@ -235,7 +282,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          resourceFile.nameOfFile ?? "",
+                          assignment_submission_file.nameOfFile ?? "",
                           style: const TextStyle(
                             fontSize: 16,
                           ),
@@ -244,7 +291,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                           softWrap: false,
                         ),
                         Text(
-                          filesize(resourceFile.sizeOfFile),
+                          filesize(assignment_submission_file.sizeOfFile),
                           style: const TextStyle(color: Colors.blueGrey),
                         )
                       ],
@@ -264,18 +311,22 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
   }
 }
 
-class DeleteResourceButton extends StatefulWidget {
-  Resource resource;
-  Function removeResource;
+class DeleteAssignmentSubmissionButton extends StatefulWidget {
+  AssignmentSubmission assignment_submission;
+  Function removeAssignmentSubmission;
 
-  DeleteResourceButton(this.resource, this.removeResource, {Key? key})
+  DeleteAssignmentSubmissionButton(
+      this.assignment_submission, this.removeAssignmentSubmission,
+      {Key? key})
       : super(key: key);
 
   @override
-  State<DeleteResourceButton> createState() => _DeleteResourceButtonState();
+  State<DeleteAssignmentSubmissionButton> createState() =>
+      _DeleteAssignmentSubmissionButtonState();
 }
 
-class _DeleteResourceButtonState extends State<DeleteResourceButton> {
+class _DeleteAssignmentSubmissionButtonState
+    extends State<DeleteAssignmentSubmissionButton> {
   bool isLoading = false;
 
   @override
@@ -287,10 +338,11 @@ class _DeleteResourceButtonState extends State<DeleteResourceButton> {
         });
         try {
           String response =
-              await ResourceService.delete_resource(widget.resource.id!);
+              await AssignmentSubmissionService.delete_assignment_submission(
+                  widget.assignment_submission.id!);
           print(response);
-          widget.removeResource(widget.resource);
-          widget.resource.files?.forEach((file) async {
+          widget.removeAssignmentSubmission(widget.assignment_submission);
+          widget.assignment_submission.submission?.forEach((file) async {
             await DefaultCacheManager().removeFile(file.downloadUrl!);
           });
           ScaffoldMessenger.of(context).showSnackBar(

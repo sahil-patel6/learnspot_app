@@ -33,4 +33,13 @@ class API {
   static String UPDATE_NOTICE(String notice_id,String teacher_id) => "$BASE_URL/notice/$notice_id/teacher/$teacher_id";
   static String DELETE_NOTICE(String notice_id,String teacher_id) => "$BASE_URL/notice/$notice_id/teacher/$teacher_id";
 
+  /// ASSIGNMENT SUBMISSIONS
+  static String GET_ASSIGNMENT_SUBMISSIONS_BY_ASSIGNMENT(String assignment_id,String user_id,String type_of_user) => "$BASE_URL/assignment_submissions/assignment/$assignment_id/$type_of_user/$user_id";
+  static String CREATE_ASSIGNMENT_SUBMISSION(String student_id) => "$BASE_URL/assignment_submission/create/student/$student_id";
+  static String UPDATE_ASSIGNMENT_SUBMISSION(String assignment_submission_id,String student_id) => "$BASE_URL/assignment_submission/$assignment_submission_id/student/$student_id";
+  static String DELETE_ASSIGNMENT_SUBMISSION(String assignment_submission_id,String student_id) => "$BASE_URL/assignment_submission/$assignment_submission_id/student/$student_id";
+
+  /// GET STUDENTS
+  static String GET_STUDENTS_BY_PARENT(String user_id) => "$BASE_URL/students/parent/$user_id";
+
 }

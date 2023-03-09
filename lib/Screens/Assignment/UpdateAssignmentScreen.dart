@@ -9,20 +9,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:intl/intl.dart';
 import 'package:lms_app/Models/Assignment.dart';
-import 'package:lms_app/Models/Subject.dart';
 import 'package:lms_app/Services/AssignmentService.dart';
 import 'package:lms_app/utils/showLoaderDialog.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:validatorless/validatorless.dart';
+
 import '../../Models/Assignment.dart';
 import '../../Models/FileData.dart';
 
 class UpdateAssignmentScreen extends StatefulWidget {
-  final Subject subject;
   final Assignment assignment;
 
-  const UpdateAssignmentScreen(this.subject, this.assignment, {Key? key})
-      : super(key: key);
+  const UpdateAssignmentScreen({
+    Key? key,
+    required this.assignment,
+  }) : super(key: key);
 
   @override
   State<UpdateAssignmentScreen> createState() => _UpdateAssignmentScreenState();
@@ -36,6 +37,9 @@ class _UpdateAssignmentScreenState extends State<UpdateAssignmentScreen> {
   TextEditingController marksController = TextEditingController();
   TextEditingController dateController = TextEditingController();
 
+  DateTime? dueDate;
+  bool isSubmissionAllowed = true;
+
   List<PlatformFile> _pickedFiles = [];
   List<FileData> deletedFiles = [];
 
@@ -47,8 +51,9 @@ class _UpdateAssignmentScreenState extends State<UpdateAssignmentScreen> {
     titleController.text = widget.assignment.title ?? "";
     descriptionController.text = widget.assignment.description ?? "";
     marksController.text = widget.assignment.marks.toString();
-    DateTime dueDate =
-    DateTime.parse(widget.assignment.dueDate.toString()).toLocal();
+    isSubmissionAllowed = widget.assignment.isSubmissionAllowed ?? true;
+    dueDate =
+        DateTime.parse(widget.assignment.dueDate.toString()).toLocal();
     dateController.text = dueDate.toString();
   }
 
@@ -101,15 +106,15 @@ class _UpdateAssignmentScreenState extends State<UpdateAssignmentScreen> {
                     widget.assignment.title = titleController.text;
                     widget.assignment.description = descriptionController.text;
                     widget.assignment.marks = int.parse(marksController.text);
+                    widget.assignment.isSubmissionAllowed = isSubmissionAllowed;
                     widget.assignment.dueDate =
                         dueDate.toUtc().toIso8601String();
                     String fcs_path = "";
                     for (var file in _pickedFiles) {
                       fcs_path =
-                      "assignments/${DateTime.now().toIso8601String()}.${file
-                          .extension}";
+                          "assignments/${DateTime.now().toIso8601String()}.${file.extension}";
                       TaskSnapshot task =
-                      await storage.ref(fcs_path).putFile(File(file.path!));
+                          await storage.ref(fcs_path).putFile(File(file.path!));
                       if (task.state == TaskState.error) {
                         print("An error occurred");
                       } else {
@@ -126,8 +131,8 @@ class _UpdateAssignmentScreenState extends State<UpdateAssignmentScreen> {
                       }
                     }
                     Assignment updatedAssignment =
-                    await AssignmentService.update_assignment(
-                        widget.assignment);
+                        await AssignmentService.update_assignment(
+                            widget.assignment);
                     // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -204,12 +209,31 @@ class _UpdateAssignmentScreenState extends State<UpdateAssignmentScreen> {
                 const SizedBox(
                   height: 18,
                 ),
+                Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: const Color(0xFFD3D3D3)),
+                  padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Submission Allowed: ", style: TextStyle(fontSize: 18),),
+                      Switch(
+                        value: isSubmissionAllowed,
+                        onChanged: (val) {
+                          setState(() {
+                            isSubmissionAllowed = val;
+                          });
+                        },
+                      )
+                    ],
+                  ),
+                ),
                 DateTimePicker(
                   type: DateTimePickerType.dateTime,
                   dateMask: 'dd MMM, yyyy, HH:mm',
-                  firstDate: DateTime.now().add(
-                    const Duration(minutes: 30),
-                  ),
+                  firstDate: dueDate,
                   lastDate: DateTime.now().add(const Duration(days: 60)),
                   icon: const Icon(Icons.event),
                   dateLabelText: 'Due Date:',
@@ -222,23 +246,24 @@ class _UpdateAssignmentScreenState extends State<UpdateAssignmentScreen> {
                   //   return true;
                   // },
                   onChanged: (val) => print(val),
-                  validator: (val) {
-                    print(val);
-                    if (val != null) {
-                      DateTime dueDate =
-                      DateFormat("yyyy-MM-dd HH:mm").parse(val);
-                      print("DATE ${dueDate.toUtc().toIso8601String()}");
-                      DateTime originalDueDate =
-                      DateTime.parse(widget.assignment.dueDate.toString()).toLocal();
-
-                      if (dueDate.isBefore(originalDueDate) || dueDate.isBefore(
-                          DateTime.now().add(const Duration(minutes: 29)))) {
-                        return "Due Date should be atleast 30 minutes";
-                      }
-                    }
-                    return null;
-                  },
-                  autovalidate: true,
+                  // validator: (val) {
+                  //   print(val);
+                  //   if (val != null) {
+                  //     DateTime dueDate =
+                  //         DateFormat("yyyy-MM-dd HH:mm").parse(val);
+                  //     print("DATE ${dueDate.toUtc().toIso8601String()}");
+                  //     DateTime originalDueDate =
+                  //         DateTime.parse(widget.assignment.dueDate.toString())
+                  //             .toLocal();
+                  //
+                  //     if (dueDate.isBefore(originalDueDate) ||
+                  //         dueDate.isBefore(DateTime.now()
+                  //             .add(const Duration(minutes: 29)))) {
+                  //       return "Due Date should be atleast 30 minutes";
+                  //     }
+                  //   }
+                  //   return null;
+                  // },
                   // onSaved: (val) => print(val),
                 ),
                 const SizedBox(
@@ -250,11 +275,10 @@ class _UpdateAssignmentScreenState extends State<UpdateAssignmentScreen> {
                   itemCount: widget.assignment.assignmentQuestionFiles?.length,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemBuilder: (context, index) =>
-                      buildFileCard(
-                        assignmentQuestionFile:
+                  itemBuilder: (context, index) => buildFileCard(
+                    assignmentQuestionFile:
                         widget.assignment.assignmentQuestionFiles![index],
-                      ),
+                  ),
                 ),
 
                 /// displaying the picked files which the user used the add files button to pick it from phone storage
@@ -262,10 +286,9 @@ class _UpdateAssignmentScreenState extends State<UpdateAssignmentScreen> {
                   itemCount: _pickedFiles.length,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemBuilder: (context, index) =>
-                      buildFileCard(
-                        file: _pickedFiles[index],
-                      ),
+                  itemBuilder: (context, index) => buildFileCard(
+                    file: _pickedFiles[index],
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: () async {
@@ -290,8 +313,7 @@ class _UpdateAssignmentScreenState extends State<UpdateAssignmentScreen> {
     );
   }
 
-  buildFileCard(
-      {PlatformFile? file, FileData? assignmentQuestionFile}) {
+  buildFileCard({PlatformFile? file, FileData? assignmentQuestionFile}) {
     String name_of_file = "";
     String size_of_file = "";
     String type_of_file = "";

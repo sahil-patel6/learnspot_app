@@ -6,8 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:lms_app/Models/Assignment.dart';
 import 'package:lms_app/Models/Subject.dart';
 import 'package:lms_app/Screens/Assignment/AddAssignmentScreen.dart';
+import 'package:lms_app/Screens/AssignmentSubmission/AssignmentSubmissionScreen.dart';
 import 'package:lms_app/Services/AssignmentService.dart';
-import 'package:lms_app/preferences.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 
 import '../../Models/FileData.dart';
@@ -17,8 +17,10 @@ import 'UpdateAssignmentScreen.dart';
 
 class AssignmentsScreen extends StatefulWidget {
   final Subject subject;
+  final User user;
 
-  const AssignmentsScreen({Key? key, required this.subject}) : super(key: key);
+  const AssignmentsScreen({Key? key, required this.subject, required this.user})
+      : super(key: key);
 
   @override
   State<AssignmentsScreen> createState() => _AssignmentsScreenState();
@@ -28,7 +30,6 @@ class _AssignmentsScreenState extends State<AssignmentsScreen> {
   bool isLoading = false;
   String error = "";
 
-  User? user;
   List<Assignment> assignments = [];
 
   getData() async {
@@ -38,7 +39,6 @@ class _AssignmentsScreenState extends State<AssignmentsScreen> {
       assignments.clear();
     });
     try {
-      user = await Preferences.getUser();
       assignments = await AssignmentService.get_assignments(widget.subject.id!);
       print(assignments);
     } catch (e) {
@@ -95,22 +95,26 @@ class _AssignmentsScreenState extends State<AssignmentsScreen> {
         title: const Text("All Assignments"),
       ),
       body: buildBody(),
-      floatingActionButton: user != null && user?.type_of_user == "Teacher" ? FloatingActionButton(
-        onPressed: () async {
-          Assignment? assignment = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AddAssignmentScreen(widget.subject),
-            ),
-          );
-          if (assignment != null) {
-            setState(() {
-              assignments.add(assignment);
-            });
-          }
-        },
-        child: const Icon(Icons.add),
-      ) : null,
+      floatingActionButton: widget.user.type_of_user == "Teacher"
+          ? FloatingActionButton(
+              onPressed: () async {
+                Assignment? assignment = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddAssignmentScreen(
+                      subject: widget.subject,
+                    ),
+                  ),
+                );
+                if (assignment != null) {
+                  setState(() {
+                    assignments.add(assignment);
+                  });
+                }
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 
@@ -185,7 +189,27 @@ class _AssignmentsScreenState extends State<AssignmentsScreen> {
               ],
             ),
           ),
-          if (user?.type_of_user == "Teacher")
+          Center(
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AssignmentSubmissionScreen(
+                      assignment: assignment,
+                      user: widget.user,
+                    ),
+                  ),
+                );
+              },
+              child: Text(
+                widget.user.type_of_user == "Teacher"
+                    ? "View All Submissions"
+                    : "View Submission",
+              ),
+            ),
+          ),
+          if (widget.user.type_of_user == "Teacher")
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -195,7 +219,7 @@ class _AssignmentsScreenState extends State<AssignmentsScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) =>
-                            UpdateAssignmentScreen(widget.subject, assignment),
+                            UpdateAssignmentScreen(assignment: assignment),
                       ),
                     );
                     if (updatedAssignment != null) {

@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:lms_app/Services/ParentHomeScreenService.dart';
 
+import '../Models/Child.dart';
 import '../Models/User.dart';
 import '../preferences.dart';
 import 'ProfileScreen.dart';
@@ -15,6 +17,36 @@ class ParentHomeScreen extends StatefulWidget {
 }
 
 class _ParentHomeScreenState extends State<ParentHomeScreen> {
+  bool isLoading = false;
+
+  List<Child> children = [];
+
+  String error = "";
+
+  getData() async {
+    setState(() {
+      isLoading = true;
+      error = "";
+      children.clear();
+    });
+    try {
+      children = await ParentHomeScreenService.get_students_by_parent();
+    } catch (e) {
+      setState(() {
+        error = e.toString();
+      });
+    }
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
+
   renderImage() {
     if (widget.user.profilePic != "") {
       return CachedNetworkImage(
@@ -61,14 +93,129 @@ class _ParentHomeScreenState extends State<ParentHomeScreen> {
           )
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text("Parent ID: ${widget.user.id}"),
-            Text("Parent Name: ${widget.user.name}")
-          ],
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : children.isEmpty
+              ? error.isEmpty
+                  ? const Center(
+                      child: Text("No students Found"),
+                    )
+                  : Center(
+                      child: Text(error),
+                    )
+              : SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                      top: 15.0,
+                      left: 15,
+                      right: 15,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Your Children:",
+                          style: TextStyle(
+                            fontSize: 25,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: children.length,
+                          itemBuilder: (context, index) {
+                            return InkWell(
+                              onTap: () {
+                                // Navigator.push(
+                                //   context,
+                                //   MaterialPageRoute(
+                                //     builder: (context) => SubjectDetailScreen(
+                                //       subject: students[index],
+                                //       user: widget.user,
+                                //     ),
+                                //   ),
+                                // );
+                              },
+                              child: buildChildCard(children[index]),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+    );
+  }
+
+  buildChildCard(Child child) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10), color: Color(0xFFD3D3D3)),
+      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
+      child: Row(children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: child.profilePic == ""
+              ? const Icon(
+                  Icons.account_box,
+                  size: 100,
+                )
+              : CachedNetworkImage(
+                  imageUrl: child.profilePic!,
+                  progressIndicatorBuilder: (context, url, downloadProgress) =>
+                      CircularProgressIndicator(
+                    value: downloadProgress.progress,
+                    color: Colors.white,
+                  ),
+                  errorWidget: (context, url, error) =>
+                      const Icon(Icons.account_circle, size: 35),
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                ),
         ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                child.name ?? "",
+                style: const TextStyle(fontSize: 18),
+              ),
+              const SizedBox(height: 15),
+              Row(
+                children: [
+                  buildSubjectCardBadge(child.semester?.department?.name ?? ""),
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  buildSubjectCardBadge(child.semester?.name ?? "")
+                ],
+              )
+            ],
+          ),
+        )
+      ]),
+    );
+  }
+
+  buildSubjectCardBadge(String text) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.green,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      child: Text(
+        text,
+        style: const TextStyle(fontSize: 16, color: Colors.white),
       ),
     );
   }
