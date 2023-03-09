@@ -6,6 +6,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import 'utils/requestNotfificationsPermission.dart';
+
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // If you're going to use other Firebase services in the background, such as Firestore,
@@ -85,28 +87,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final storage = FirebaseStorage.instance;
-
-  final storageRef = FirebaseStorage.instance.ref();
-
-  FirebaseMessaging messaging = FirebaseMessaging.instance;
-
-  requestNotificationPermission() async {
-    NotificationSettings settings = await messaging.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
-    );
-
-    print('User granted permission: ${settings.authorizationStatus}');
-    if (settings.authorizationStatus == AuthorizationStatus.denied) {
-      print("Notification permission denied");
-    }
-  }
 
   fcmForegroundMessageHandler(RemoteMessage message) {
     print('Got a message whilst in the foreground!');

@@ -8,7 +8,6 @@ class Preferences {
   static getUser() async {
     final prefs = await SharedPreferences.getInstance();
     String data = await prefs.getString("user") ?? "";
-    print(data);
     if (data != "") {
       return User.fromJson(jsonDecode(data));
     }

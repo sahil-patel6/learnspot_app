@@ -4,6 +4,7 @@ import 'package:validatorless/validatorless.dart';
 
 import '../Models/User.dart';
 import '../Services/SignInService.dart';
+import '../utils/requestNotfificationsPermission.dart';
 import 'ParentHomeScreen.dart';
 import 'StudentHomeScreen.dart';
 import 'TeacherHomeScreen.dart';
@@ -22,6 +23,12 @@ class _SignInScreenState extends State<SignInScreen> {
   bool isLoading = false;
   final type_of_user = ["Teacher", "Student", "Parent"];
   String _currentSelectedValue = "Teacher";
+
+  @override
+  void initState() {
+    super.initState();
+    requestNotificationPermission();
+  }
 
   @override
   Widget build(BuildContext context) {

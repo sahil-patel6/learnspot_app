@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:lms_app/Models/Child.dart';
+import 'package:lms_app/Models/Student.dart';
 
 import 'package:http/http.dart' as http;
 
@@ -9,7 +9,7 @@ import '../preferences.dart';
 import '../utils/Api.dart';
 
 class ParentHomeScreenService {
-  static Future<List<Child>> get_students_by_parent() async {
+  static Future<List<Student>> get_students_by_parent() async {
     User user = await Preferences.getUser();
     final http.Response response = await http.get(
       Uri.parse(API.GET_STUDENTS_BY_PARENT(user.id!)),
@@ -20,10 +20,10 @@ class ParentHomeScreenService {
     );
     if (response.statusCode == 200) {
       print(jsonDecode(response.body));
-      List<Child> children = [];
+      List<Student> children = [];
       try {
         jsonDecode(response.body).forEach((student) {
-          children.add(Child.fromJson(student));
+          children.add(Student.fromJson(student));
         });
       } catch (e) {
         print(e);
