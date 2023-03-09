@@ -1,7 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:lms_app/Screens/Attendance/AttendanceScreen.dart';
 import 'package:lms_app/Screens/Notice/NoticesScreen.dart';
 import 'package:lms_app/Services/StudentHomeScreenService.dart';
+import 'package:lms_app/utils/requestNotfificationsPermission.dart';
 
 import '../Models/Subject.dart';
 import '../Models/User.dart';
@@ -26,6 +29,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   String error = "";
 
   int _selectedBottomNavigationItemIndex = 0;
+  String appBarTitle = "Home";
 
   getListOfSubjects() async {
     setState(() {
@@ -61,12 +65,27 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         );
       }
     } else {
-      return _selectedBottomNavigationItemIndex == 0
-          ? buildHomeMainBody()
-          : NoticesScreen(
-              semester_id: (subjects.first.semester?.id)!,
-              user: widget.user,
-            );
+      switch (_selectedBottomNavigationItemIndex) {
+        case 0:
+          setState(() {
+            appBarTitle = "Home";
+          });
+          return buildHomeMainBody();
+        case 1:
+          setState(() {
+            appBarTitle = "Attendance";
+          });
+          return AttendanceScreen(user: widget.user);
+        case 2:
+          setState(() {
+            appBarTitle = "All Notices";
+          });
+          return NoticesScreen(
+            semester_id: (subjects.first.semester?.id)!,
+            user: widget.user,
+          );
+      }
+      return buildHomeMainBody();
     }
   }
 
@@ -121,6 +140,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   @override
   void initState() {
     super.initState();
+    requestNotificationPermission();
     getListOfSubjects();
   }
 
@@ -148,7 +168,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Home"),
+        title: Text(appBarTitle),
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 10.0, top: 10, bottom: 10),
@@ -174,7 +194,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         ],
       ),
       body: buildHomeBody(),
-      bottomNavigationBar: widget.user != null && !isLoading
+      bottomNavigationBar: !isLoading
           ? BottomNavigationBar(
               currentIndex: _selectedBottomNavigationItemIndex,
               onTap: (index) {
@@ -186,6 +206,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 BottomNavigationBarItem(
                   icon: Icon(Icons.home),
                   label: "Home",
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.notifications),
+                  label: "Attendance",
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.notifications),

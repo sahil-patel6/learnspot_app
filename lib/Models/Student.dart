@@ -1,7 +1,7 @@
 import 'Semester.dart';
 
-class Child {
-  String? sId;
+class Student {
+  String? id;
   String? name;
   String? email;
   String? phone;
@@ -12,8 +12,8 @@ class Child {
   String? fcsProfilePicPath;
   Semester? semester;
 
-  Child(
-      {this.sId,
+  Student(
+      {this.id,
         this.name,
         this.email,
         this.phone,
@@ -24,8 +24,8 @@ class Child {
         this.fcsProfilePicPath,
         this.semester});
 
-  Child.fromJson(Map<String, dynamic> json) {
-    sId = json['_id'];
+  Student.fromJson(Map<String, dynamic> json) {
+    id = json['_id'];
     name = json['name'];
     email = json['email'];
     phone = json['phone'];
@@ -34,14 +34,14 @@ class Child {
     address = json['address'];
     profilePic = json['profile_pic'];
     fcsProfilePicPath = json['fcs_profile_pic_path'];
-    semester = json['semester'] != null
+    semester = json['semester'] != null && json["semester"] is Semester
         ? Semester.fromJson(json['semester'])
         : null;
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    data['_id'] = sId;
+    // data['_id'] = id;
     data['name'] = name;
     data['email'] = email;
     data['phone'] = phone;

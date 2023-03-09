@@ -1,8 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:lms_app/Services/ParentHomeScreenService.dart';
+import 'package:lms_app/utils/requestNotfificationsPermission.dart';
 
-import '../Models/Child.dart';
+import '../Models/Student.dart';
 import '../Models/User.dart';
 import '../preferences.dart';
 import 'ProfileScreen.dart';
@@ -19,7 +20,7 @@ class ParentHomeScreen extends StatefulWidget {
 class _ParentHomeScreenState extends State<ParentHomeScreen> {
   bool isLoading = false;
 
-  List<Child> children = [];
+  List<Student> children = [];
 
   String error = "";
 
@@ -44,6 +45,7 @@ class _ParentHomeScreenState extends State<ParentHomeScreen> {
   @override
   void initState() {
     super.initState();
+    requestNotificationPermission();
     getData();
   }
 
@@ -151,7 +153,7 @@ class _ParentHomeScreenState extends State<ParentHomeScreen> {
     );
   }
 
-  buildChildCard(Child child) {
+  buildChildCard(Student child) {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(

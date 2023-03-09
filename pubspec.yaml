@@ -49,6 +49,9 @@ dependencies:
   open_file_plus: ^3.3.0
   flutter_cache_manager: ^3.3.0
   date_time_picker: ^2.1.0
+  permission_handler: ^10.2.0
+  notification_permissions: ^0.6.1
+  http: ^0.13.5
 
 dev_dependencies:
   flutter_test:

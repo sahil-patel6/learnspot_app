@@ -248,7 +248,7 @@ class _AddAssignmentScreenState extends State<AddAssignmentScreen> {
                     }
                     return null;
                   },
-                  autovalidate: true,
+                  autovalidate: false,
                   // onSaved: (val) => print(val),
                 ),
                 const SizedBox(

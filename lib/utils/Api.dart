@@ -1,6 +1,6 @@
 class API {
-  // static const String BASE_URL = "https://learnspot-api.up.railway.app/api/v1";
-  static const String BASE_URL = "http://192.168.1.7:8000/api/v1";
+  static const String BASE_URL = "https://learnspot-api.up.railway.app/api/v1";
+  // static const String BASE_URL = "http://192.168.1.7:8000/api/v1";
   /// USER SIGN-IN URLS
   static String USER_SIGNIN_URL(String type_of_user) => "$BASE_URL/$type_of_user/signin";
 
@@ -41,5 +41,12 @@ class API {
 
   /// GET STUDENTS
   static String GET_STUDENTS_BY_PARENT(String user_id) => "$BASE_URL/students/parent/$user_id";
+  static String GET_STUDENTS_BY_SEMESTER(String semester_id,String teacher_id) => "$BASE_URL/students/$semester_id/teacher/$teacher_id";
+
+  /// ATTENDANCE
+  static String GET_ATTENDANCE_SESSIONS(String user_id,String type_of_user) => "$BASE_URL/attendance_sessions/$type_of_user/$user_id";
+  static String CREATE_ATTENDACE_SESSION(String user_id) => "$BASE_URL/attendance_session/create/teacher/$user_id";
+  static String UPDATE_ATTENDACE_SESSION(String attendance_session_id,String teacher_id) => "$BASE_URL/attendance_session/$attendance_session_id/teacher/$teacher_id";
+  static String DELETE_ATTENDACE_SESSION(String attendance_session_id,String teacher_id) => "$BASE_URL/attendance_session/$attendance_session_id/teacher/$teacher_id";
 
 }

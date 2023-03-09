@@ -1,10 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
 import '../Models/Subject.dart';
 import '../Models/User.dart';
 import '../Services/TeacherHomeScreenService.dart';
 import '../preferences.dart';
+import '../utils/requestNotfificationsPermission.dart';
 import 'ProfileScreen.dart';
 import 'SubjectDetailScreen.dart';
 
@@ -45,6 +47,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
   @override
   void initState() {
     super.initState();
+    requestNotificationPermission();
     getData();
   }
 

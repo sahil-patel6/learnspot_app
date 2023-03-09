@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lms_app/Models/Subject.dart';
 import 'package:lms_app/Screens/Assignment/AssignmentsScreen.dart';
+import 'package:lms_app/Screens/Attendance/AttendanceScreen.dart';
 import 'package:lms_app/Screens/Notice/NoticesScreen.dart';
 import 'package:lms_app/Screens/Resource/ResourcesScreen.dart';
 
@@ -64,7 +65,19 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
                 const SizedBox(
                   height: 18,
                 ),
+                if (widget.user.type_of_user == "Teacher")
                 InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AttendanceScreen(
+                          user: widget.user,
+                          subject: widget.subject,
+                        ),
+                      ),
+                    );
+                  },
                   child: buildCard("Attendance"),
                 ),
                 const SizedBox(

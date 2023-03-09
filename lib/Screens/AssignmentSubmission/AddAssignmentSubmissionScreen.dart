@@ -11,7 +11,7 @@ import 'package:open_file_plus/open_file_plus.dart';
 import '../../Models/Assignment.dart';
 import '../../Models/AssignmentSubmission.dart';
 import '../../Models/FileData.dart';
-import '../../Models/Child.dart';
+import '../../Models/Student.dart';
 import '../../Models/User.dart';
 
 class AddAssignmentSubmissionScreen extends StatefulWidget {
