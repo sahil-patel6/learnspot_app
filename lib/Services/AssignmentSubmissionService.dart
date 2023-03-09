@@ -1,18 +1,17 @@
 import 'dart:convert';
-import '../Models/Notice.dart';
+
 import 'package:http/http.dart' as http;
+import 'package:lms_app/Models/AssignmentSubmission.dart';
 
-
-import '../Models/Semester.dart';
 import '../Models/User.dart';
 import '../preferences.dart';
 import '../utils/Api.dart';
 
-class NoticeService {
-  static Future<List<Notice>> get_notices(String semester_id) async {
+class AssignmentSubmissionService {
+  static Future<List<AssignmentSubmission>> get_assignment_submissions(String assignment_id) async {
     User user = await Preferences.getUser();
     final http.Response response = await http.get(
-      Uri.parse(API.GET_NOTICES(semester_id,user.id!,(user.type_of_user?.toLowerCase())!)),
+      Uri.parse(API.GET_ASSIGNMENT_SUBMISSIONS_BY_ASSIGNMENT(assignment_id, user.id!,(user.type_of_user?.toLowerCase())!)),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Bearer ${user.token}'
@@ -20,77 +19,73 @@ class NoticeService {
     );
     if (response.statusCode == 200) {
       print(jsonDecode(response.body));
-      List<Notice> notices = [];
+      List<AssignmentSubmission> assignment_submissions = [];
       try {
         jsonDecode(response.body).forEach((resource) {
-          notices.add(Notice.fromJson(resource));
+          assignment_submissions.add(AssignmentSubmission.fromJson(resource));
         });
       } catch (e) {
         print(e);
       }
-      return notices;
+      return assignment_submissions;
     } else {
       print(response.body);
       throw Exception(jsonDecode(response.body)["error"]);
     }
   }
 
-  static Future<Notice> create_notice(Notice notice) async {
+  static Future<AssignmentSubmission> create_assignment_submission(AssignmentSubmission assignment_submission) async {
     User user = await Preferences.getUser();
-    final http.Response response = await http.post(
-        Uri.parse(API.CREATE_NOTICE(user.id!)),
+    final http.Response response =
+    await http.post(Uri.parse(API.CREATE_ASSIGNMENT_SUBMISSION(user.id!)),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer ${user.token}'
         },
-        body: jsonEncode(notice.toJson())
-    );
+        body: jsonEncode(assignment_submission.toJson()));
     if (response.statusCode == 200) {
       print(jsonDecode(response.body));
-      Notice createdNotice = Notice();
+      AssignmentSubmission createdAssignmentSubmission = AssignmentSubmission();
       try {
-        createdNotice = Notice.fromJson(jsonDecode(response.body));
-        print("PRINTING CREATED NOTICE");
-        print(jsonEncode(createdNotice.toJson()));
+        createdAssignmentSubmission = AssignmentSubmission.fromJson(jsonDecode(response.body));
       } catch (e) {
         print(e);
       }
-      return createdNotice;
+      return createdAssignmentSubmission;
     } else {
       print(response.body);
       throw Exception(jsonDecode(response.body)["error"]);
     }
   }
 
-  static Future<Notice> update_notice(Notice notice) async {
+  static Future<AssignmentSubmission> update_assignment_submission(AssignmentSubmission assignment_submission) async {
     User user = await Preferences.getUser();
     final http.Response response = await http.put(
-        Uri.parse(API.UPDATE_NOTICE(notice.id!,user.id!)),
+        Uri.parse(API.UPDATE_ASSIGNMENT_SUBMISSION(assignment_submission.id!, user.id!)),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer ${user.token}'
         },
-        body: jsonEncode(notice.toJson())
-    );
+        body: jsonEncode(assignment_submission.toJson()));
     if (response.statusCode == 200) {
       print(jsonDecode(response.body));
-      Notice updatedNotice = Notice();
+      AssignmentSubmission updatedAssignmentSubmission = AssignmentSubmission();
       try {
-        updatedNotice = Notice.fromJson(jsonDecode(response.body));
+        updatedAssignmentSubmission = AssignmentSubmission.fromJson(jsonDecode(response.body));
       } catch (e) {
         print(e);
       }
-      return updatedNotice;
+      return updatedAssignmentSubmission;
     } else {
       print(response.body);
       throw Exception(jsonDecode(response.body)["error"]);
     }
   }
 
-  static Future<String> delete_notice(String notice_id) async {
+  static Future<String> delete_assignment_submission(String assignment_submission_id) async {
     User user = await Preferences.getUser();
     final http.Response response = await http.delete(
-      Uri.parse(API.DELETE_NOTICE(notice_id,user.id!)),
+      Uri.parse(API.DELETE_ASSIGNMENT_SUBMISSION(assignment_submission_id, user.id!)),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Bearer ${user.token}'

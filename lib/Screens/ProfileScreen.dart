@@ -51,7 +51,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return CachedNetworkImage(
         imageUrl: user!.profilePic!,
         progressIndicatorBuilder: (context, url, downloadProgress) =>
-            CircularProgressIndicator(value: downloadProgress.progress),
+            CircularProgressIndicator(
+          value: downloadProgress.progress,
+          color: Colors.white,
+        ),
         errorWidget: (context, url, error) =>
             const Icon(Icons.account_circle, size: 200),
         width: 200,

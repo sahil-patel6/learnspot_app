@@ -4,10 +4,14 @@ import 'package:lms_app/Screens/Assignment/AssignmentsScreen.dart';
 import 'package:lms_app/Screens/Notice/NoticesScreen.dart';
 import 'package:lms_app/Screens/Resource/ResourcesScreen.dart';
 
+import '../Models/User.dart';
+
 class SubjectDetailScreen extends StatefulWidget {
+  final User user;
   final Subject subject;
 
-  const SubjectDetailScreen({Key? key, required this.subject})
+  const SubjectDetailScreen(
+      {Key? key, required this.subject, required this.user})
       : super(key: key);
 
   @override
@@ -31,8 +35,10 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            ResourcesScreen(subject: widget.subject),
+                        builder: (context) => ResourcesScreen(
+                          subject: widget.subject,
+                          user: widget.user,
+                        ),
                       ),
                     );
                   },
@@ -46,8 +52,10 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            AssignmentsScreen(subject: widget.subject),
+                        builder: (context) => AssignmentsScreen(
+                          subject: widget.subject,
+                          user: widget.user,
+                        ),
                       ),
                     );
                   },
@@ -62,20 +70,23 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
                 const SizedBox(
                   height: 18,
                 ),
-                InkWell(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            NoticesScreen(subject: widget.subject),
-                      ),
-                    );
-                  },
-                  child: buildCard(
-                    "Notices (${widget.subject.semester?.department?.name}) (${widget.subject.semester?.name})",
+                if (widget.user.type_of_user == "Teacher")
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => NoticesScreen(
+                            semester_id: (widget.subject.semester?.id)!,
+                            user: widget.user,
+                          ),
+                        ),
+                      );
+                    },
+                    child: buildCard(
+                      "Notices (${widget.subject.semester?.department?.name}) (${widget.subject.semester?.name})",
+                    ),
                   ),
-                ),
                 const SizedBox(
                   height: 18,
                 ),

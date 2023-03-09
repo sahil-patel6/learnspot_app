@@ -17,7 +17,7 @@ class Semester {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    data['_id'] = id;
+    // data['_id'] = id;
     data['name'] = name;
     if (department != null) {
       data['department'] = department!.toJson();

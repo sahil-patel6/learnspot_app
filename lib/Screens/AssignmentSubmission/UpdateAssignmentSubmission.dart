@@ -6,31 +6,31 @@ import 'package:filesize/filesize.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:lms_app/Services/ResourceService.dart';
+import 'package:lms_app/Services/AssignmentSubmissionService.dart';
 import 'package:lms_app/utils/showLoaderDialog.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:validatorless/validatorless.dart';
 
+import '../../Models/AssignmentSubmission.dart';
 import '../../Models/FileData.dart';
-import '../../Models/Resource.dart';
 
-class UpdateResourceScreen extends StatefulWidget {
-  final Resource resource;
+class UpdateAssignmentSubmissionScreen extends StatefulWidget {
+  final AssignmentSubmission assignment_submission;
 
-  const UpdateResourceScreen({
-    Key? key,
-    required this.resource,
-  }) : super(key: key);
+  const UpdateAssignmentSubmissionScreen(
+      {Key? key, required this.assignment_submission})
+      : super(key: key);
 
   @override
-  State<UpdateResourceScreen> createState() => _UpdateResourceScreenState();
+  State<UpdateAssignmentSubmissionScreen> createState() =>
+      _UpdateAssignmentSubmissionScreenState();
 }
 
-class _UpdateResourceScreenState extends State<UpdateResourceScreen> {
+class _UpdateAssignmentSubmissionScreenState
+    extends State<UpdateAssignmentSubmissionScreen> {
   bool isLoading = false;
 
-  TextEditingController titleController = TextEditingController();
-  TextEditingController descriptionController = TextEditingController();
+  TextEditingController commentsController = TextEditingController();
 
   List<PlatformFile> _pickedFiles = [];
   List<FileData> deletedFiles = [];
@@ -40,15 +40,14 @@ class _UpdateResourceScreenState extends State<UpdateResourceScreen> {
   @override
   void initState() {
     super.initState();
-    titleController.text = widget.resource.title ?? "";
-    descriptionController.text = widget.resource.description ?? "";
+    commentsController.text = widget.assignment_submission.comments ?? "";
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Update Resource"),
+        title: const Text("Update Submission"),
         actions: [
           if (isLoading)
             Center(
@@ -66,7 +65,8 @@ class _UpdateResourceScreenState extends State<UpdateResourceScreen> {
               onPressed: () async {
                 if (formKey.currentState!.validate() &&
                     (_pickedFiles.isNotEmpty ||
-                        (widget.resource.files?.isNotEmpty)!)) {
+                        (widget
+                            .assignment_submission.submission?.isNotEmpty)!)) {
                   try {
                     setState(() {
                       isLoading = true;
@@ -75,26 +75,21 @@ class _UpdateResourceScreenState extends State<UpdateResourceScreen> {
                     for (var deletedFile in deletedFiles) {
                       await storage.ref(deletedFile.fcsPath).delete();
                     }
-                    widget.resource.title = titleController.text;
-                    widget.resource.description = descriptionController.text;
-
-                    // Resource resource = Resource(
-                    //   title: titleController.text,
-                    //   description: descriptionController.text,
-                    //   subject: widget.subject.id,
-                    //   files: [],
-                    // );
+                    widget.assignment_submission.comments =
+                        commentsController.text;
+                    widget.assignment_submission.submissionDate =
+                        DateTime.now().toUtc().toIso8601String();
                     String fcs_path = "";
                     for (var file in _pickedFiles) {
                       fcs_path =
-                          "resources/${DateTime.now().toIso8601String()}.${file.extension}";
+                          "assignment_submissions/${DateTime.now().toIso8601String()}.${file.extension}";
                       TaskSnapshot task =
                           await storage.ref(fcs_path).putFile(File(file.path!));
                       if (task.state == TaskState.error) {
                         print("An error occurred");
                       } else {
                         String downloadUrl = await task.ref.getDownloadURL();
-                        widget.resource.files?.add(
+                        widget.assignment_submission.submission?.add(
                           FileData(
                             nameOfFile: file.name,
                             typeOfFile: ".${file.extension}",
@@ -105,18 +100,21 @@ class _UpdateResourceScreenState extends State<UpdateResourceScreen> {
                         );
                       }
                     }
-                    Resource updatedResource =
-                        await ResourceService.update_resource(widget.resource);
+                    AssignmentSubmission updatedAssignmentSubmission =
+                        await AssignmentSubmissionService
+                            .update_assignment_submission(
+                                widget.assignment_submission);
                     // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text("Resource Updated Successfully"),
+                        content:
+                            Text("Assignment Submission Updated Successfully"),
                       ),
                     );
                     setState(() {
                       isLoading = false;
                     });
-                    Navigator.pop(context, updatedResource);
+                    Navigator.pop(context, updatedAssignmentSubmission);
                   } catch (e) {
                     print(e);
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -138,7 +136,7 @@ class _UpdateResourceScreenState extends State<UpdateResourceScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextFormField(
-                  controller: titleController,
+                  controller: commentsController,
                   validator: Validatorless.multiple([
                     Validatorless.required('Title is required'),
                     Validatorless.min(
@@ -150,31 +148,18 @@ class _UpdateResourceScreenState extends State<UpdateResourceScreen> {
                     labelText: "Title:",
                   ),
                 ),
-                const SizedBox(height: 18),
-                TextFormField(
-                  controller: descriptionController,
-                  validator: Validatorless.multiple([
-                    Validatorless.required('Description is required'),
-                    Validatorless.between(
-                        10, 150, 'Please Enter between 10 and 150 characters')
-                  ]),
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: "Description:",
-                    labelText: "Description:",
-                  ),
-                ),
                 const SizedBox(
                   height: 18,
                 ),
 
-                /// displaying list of files we got from resource screen
+                /// displaying list of files we got from Assignment Submission screen
                 ListView.builder(
-                  itemCount: widget.resource.files?.length,
+                  itemCount: widget.assignment_submission.submission?.length,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemBuilder: (context, index) => buildFileCard(
-                    resourceFile: widget.resource.files![index],
+                    assignmentSubmissionFile:
+                        widget.assignment_submission.submission![index],
                   ),
                 ),
 
@@ -210,7 +195,7 @@ class _UpdateResourceScreenState extends State<UpdateResourceScreen> {
     );
   }
 
-  buildFileCard({PlatformFile? file, FileData? resourceFile}) {
+  buildFileCard({PlatformFile? file, FileData? assignmentSubmissionFile}) {
     String name_of_file = "";
     String size_of_file = "";
     String type_of_file = "";
@@ -219,9 +204,9 @@ class _UpdateResourceScreenState extends State<UpdateResourceScreen> {
       size_of_file = filesize(file.size);
       type_of_file = ".${file.extension}";
     } else {
-      name_of_file = resourceFile?.nameOfFile ?? "";
-      size_of_file = filesize(resourceFile?.sizeOfFile);
-      type_of_file = resourceFile?.typeOfFile ?? "";
+      name_of_file = assignmentSubmissionFile?.nameOfFile ?? "";
+      size_of_file = filesize(assignmentSubmissionFile?.sizeOfFile);
+      type_of_file = assignmentSubmissionFile?.typeOfFile ?? "";
     }
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -237,10 +222,10 @@ class _UpdateResourceScreenState extends State<UpdateResourceScreen> {
               onTap: () async {
                 if (file != null) {
                   OpenFile.open(file.path);
-                } else if (resourceFile != null) {
+                } else if (assignmentSubmissionFile != null) {
                   showLoaderDialog(context);
                   File file = await DefaultCacheManager()
-                      .getSingleFile(resourceFile.downloadUrl!);
+                      .getSingleFile(assignmentSubmissionFile.downloadUrl!);
                   Navigator.pop(context);
                   OpenFile.open(file.path);
                 } else {
@@ -284,8 +269,9 @@ class _UpdateResourceScreenState extends State<UpdateResourceScreen> {
                 if (file != null) {
                   _pickedFiles.remove(file);
                 } else {
-                  widget.resource.files?.remove(resourceFile);
-                  deletedFiles.add(resourceFile!);
+                  widget.assignment_submission.submission
+                      ?.remove(assignmentSubmissionFile);
+                  deletedFiles.add(assignmentSubmissionFile!);
                 }
               });
             },

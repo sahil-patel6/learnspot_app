@@ -29,7 +29,7 @@ class Subject {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    data['_id'] = id;
+    // data['_id'] = id;
     data['name'] = name;
     data['pic_url'] = picUrl;
     data['fcs_pic_path'] = fcsPicPath;
