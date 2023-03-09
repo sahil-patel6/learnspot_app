@@ -11,7 +11,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // If you're going to use other Firebase services in the background, such as Firestore,
   // make sure you call `initializeApp` before using other Firebase services.
   // await Firebase.initializeApp();
-
   print("Handling a background message: ${message.messageId}");
   showFlutterNotification(message);
 }
@@ -24,11 +23,12 @@ void showFlutterNotification(RemoteMessage message) async {
       'high_importance_channel', // id
       'High Importance Notifications', // title
       description:
-      'This channel is used for important notifications.', // description
+          'This channel is used for important notifications.', // description
       importance: Importance.high,
     );
 
-    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+        FlutterLocalNotificationsPlugin();
 
     /// Create an Android Notification Channel.
     ///
@@ -36,12 +36,13 @@ void showFlutterNotification(RemoteMessage message) async {
     /// default FCM channel to enable heads up notifications.
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>()
+            AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
 
     /// Update the iOS foreground notification presentation options to allow
     /// heads up notifications.
-    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,
       sound: true,
@@ -116,6 +117,7 @@ class _MyAppState extends State<MyApp> {
     }
     showFlutterNotification(message);
   }
+
   String token = "";
 
   @override
@@ -160,37 +162,37 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       home: const SplashScreen(),
       //home: Scaffold(
-        // appBar: AppBar(
-        //   title: const Text("LMS App"),
-        // ),
-        // body: Center(
-        //   child: Column(
-        //     mainAxisSize: MainAxisSize.min,
-        //     children: [
-        //       Text("FCM Token: $token"),
-        //       ElevatedButton(
-        //         onPressed: () async {
-        //           FilePickerResult? result = await FilePicker.platform.pickFiles();
+      // appBar: AppBar(
+      //   title: const Text("LMS App"),
+      // ),
+      // body: Center(
+      //   child: Column(
+      //     mainAxisSize: MainAxisSize.min,
+      //     children: [
+      //       Text("FCM Token: $token"),
+      //       ElevatedButton(
+      //         onPressed: () async {
+      //           FilePickerResult? result = await FilePicker.platform.pickFiles();
 
-        //           if (result != null) {
-        //             File file = File(result.files.single.path!);
-        //             String fileName = result.files.first.name;
-        //             print(fileName);
-        //             await storage
-        //                 .ref("temp/uploads/$fileName")
-        //                 .putFile(file)
-        //                 .then((p0) async => print(await p0.ref.getDownloadURL()))
-        //                 .onError((error, stackTrace) => print(error));
-        //           } else {
-        //             // User canceled the picker
-        //             print("User canceled the picker");
-        //           }
-        //         },
-        //         child: const Text("Upload File"),
-        //       ),
-        //     ],
-        //   ),
-        // ),
+      //           if (result != null) {
+      //             File file = File(result.files.single.path!);
+      //             String fileName = result.files.first.name;
+      //             print(fileName);
+      //             await storage
+      //                 .ref("temp/uploads/$fileName")
+      //                 .putFile(file)
+      //                 .then((p0) async => print(await p0.ref.getDownloadURL()))
+      //                 .onError((error, stackTrace) => print(error));
+      //           } else {
+      //             // User canceled the picker
+      //             print("User canceled the picker");
+      //           }
+      //         },
+      //         child: const Text("Upload File"),
+      //       ),
+      //     ],
+      //   ),
+      // ),
       // ),
     );
   }
