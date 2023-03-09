@@ -1,10 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:lms_app/Screens/Notice/NoticesScreen.dart';
 import 'package:lms_app/Services/StudentHomeScreenService.dart';
 
 import '../Models/Subject.dart';
 import '../Models/User.dart';
-import '../Services/TeacherHomeScreenService.dart';
 import '../preferences.dart';
 import 'ProfileScreen.dart';
 import 'SubjectDetailScreen.dart';
@@ -25,7 +25,9 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
   String error = "";
 
-  getData() async {
+  int _selectedBottomNavigationItemIndex = 0;
+
+  getListOfSubjects() async {
     setState(() {
       isLoading = true;
       error = "";
@@ -43,10 +45,83 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
     });
   }
 
+  Widget buildHomeBody() {
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    } else if (subjects.isEmpty) {
+      if (error.isEmpty) {
+        return const Center(
+          child: Text("No subjects found"),
+        );
+      } else {
+        return Center(
+          child: Text(error),
+        );
+      }
+    } else {
+      return _selectedBottomNavigationItemIndex == 0
+          ? buildHomeMainBody()
+          : NoticesScreen(
+              semester_id: (subjects.first.semester?.id)!,
+              user: widget.user,
+            );
+    }
+  }
+
+  Widget buildHomeMainBody() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.only(
+          top: 15.0,
+          left: 15,
+          right: 15,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Your Subjects:",
+              style: TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: subjects.length,
+              itemBuilder: (context, index) {
+                return InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SubjectDetailScreen(
+                          subject: subjects[index],
+                          user: widget.user,
+                        ),
+                      ),
+                    );
+                  },
+                  child: buildSubjectCard(subjects[index]),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
-    getData();
+    getListOfSubjects();
   }
 
   renderImage() {
@@ -54,9 +129,12 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       return CachedNetworkImage(
         imageUrl: widget.user.profilePic!,
         progressIndicatorBuilder: (context, url, downloadProgress) =>
-            CircularProgressIndicator(value: downloadProgress.progress),
+            CircularProgressIndicator(
+          value: downloadProgress.progress,
+          color: Colors.white,
+        ),
         errorWidget: (context, url, error) =>
-        const Icon(Icons.account_circle, size: 35),
+            const Icon(Icons.account_circle, size: 35),
         width: 35,
         height: 35,
         fit: BoxFit.cover,
@@ -95,60 +173,27 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
           )
         ],
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : subjects.isEmpty
-          ? error.isEmpty
-          ? const Center(
-        child: Text("No subjects Found"),
-      )
-          : Center(
-        child: Text(error),
-      )
-          : SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.only(
-            top: 15.0,
-            left: 15,
-            right: 15,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Your Subjects:",
-                style: TextStyle(
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
+      body: buildHomeBody(),
+      bottomNavigationBar: widget.user != null && !isLoading
+          ? BottomNavigationBar(
+              currentIndex: _selectedBottomNavigationItemIndex,
+              onTap: (index) {
+                setState(() {
+                  _selectedBottomNavigationItemIndex = index;
+                });
+              },
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home),
+                  label: "Home",
                 ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: subjects.length,
-                itemBuilder: (context, index) {
-                  return InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SubjectDetailScreen(
-                            subject: subjects[index],
-                          ),
-                        ),
-                      );
-                    },
-                    child: buildSubjectCard(subjects[index]),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.notifications),
+                  label: "Notices",
+                ),
+              ],
+            )
+          : null,
     );
   }
 
@@ -166,7 +211,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
             progressIndicatorBuilder: (context, url, downloadProgress) =>
                 CircularProgressIndicator(value: downloadProgress.progress),
             errorWidget: (context, url, error) =>
-            const Icon(Icons.account_circle, size: 35),
+                const Icon(Icons.account_circle, size: 35),
             width: 100,
             height: 100,
             fit: BoxFit.cover,

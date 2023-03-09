@@ -53,7 +53,10 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
       return CachedNetworkImage(
         imageUrl: widget.user.profilePic!,
         progressIndicatorBuilder: (context, url, downloadProgress) =>
-            CircularProgressIndicator(value: downloadProgress.progress),
+            CircularProgressIndicator(
+          value: downloadProgress.progress,
+          color: Colors.white,
+        ),
         errorWidget: (context, url, error) =>
             const Icon(Icons.account_circle, size: 35),
         width: 35,
@@ -136,6 +139,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                                   MaterialPageRoute(
                                     builder: (context) => SubjectDetailScreen(
                                       subject: subjects[index],
+                                      user: widget.user,
                                     ),
                                   ),
                                 );

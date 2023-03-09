@@ -6,7 +6,6 @@ import 'package:filesize/filesize.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:lms_app/Models/Subject.dart';
 import 'package:lms_app/Services/NoticeService.dart';
 import 'package:lms_app/utils/showLoaderDialog.dart';
 import 'package:open_file_plus/open_file_plus.dart';
@@ -16,11 +15,9 @@ import '../../Models/FileData.dart';
 import '../../Models/Notice.dart';
 
 class UpdateNoticeScreen extends StatefulWidget {
-  final Subject subject;
   final Notice notice;
 
-  const UpdateNoticeScreen(this.subject, this.notice, {Key? key})
-      : super(key: key);
+  const UpdateNoticeScreen(this.notice, {Key? key}) : super(key: key);
 
   @override
   State<UpdateNoticeScreen> createState() => _UpdateNoticeScreenState();
@@ -35,6 +32,9 @@ class _UpdateNoticeScreenState extends State<UpdateNoticeScreen> {
   List<PlatformFile> _pickedFiles = [];
   List<FileData> deletedFiles = [];
 
+  final type_of_notice = ['Announcement', 'Timetable', 'Result'];
+  String _currentSelectedValue = "Announcement";
+
   final formKey = GlobalKey<FormState>();
 
   @override
@@ -42,6 +42,7 @@ class _UpdateNoticeScreenState extends State<UpdateNoticeScreen> {
     super.initState();
     titleController.text = widget.notice.title ?? "";
     descriptionController.text = widget.notice.description ?? "";
+    _currentSelectedValue = widget.notice.type ?? "Announcement";
   }
 
   @override
@@ -64,9 +65,7 @@ class _UpdateNoticeScreenState extends State<UpdateNoticeScreen> {
           else
             IconButton(
               onPressed: () async {
-                if (formKey.currentState!.validate() &&
-                    (_pickedFiles.isNotEmpty ||
-                        (widget.notice.files?.isNotEmpty)!)) {
+                if (formKey.currentState!.validate()) {
                   try {
                     setState(() {
                       isLoading = true;
@@ -81,9 +80,9 @@ class _UpdateNoticeScreenState extends State<UpdateNoticeScreen> {
                     String fcs_path = "";
                     for (var file in _pickedFiles) {
                       fcs_path =
-                      "notices/${DateTime.now().toIso8601String()}.${file.extension}";
+                          "notices/${DateTime.now().toIso8601String()}.${file.extension}";
                       TaskSnapshot task =
-                      await storage.ref(fcs_path).putFile(File(file.path!));
+                          await storage.ref(fcs_path).putFile(File(file.path!));
                       if (task.state == TaskState.error) {
                         print("An error occurred");
                       } else {
@@ -100,11 +99,11 @@ class _UpdateNoticeScreenState extends State<UpdateNoticeScreen> {
                       }
                     }
                     Notice updatedNotice =
-                    await NoticeService.update_notice(widget.notice);
+                        await NoticeService.update_notice(widget.notice);
                     // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text("Resource Updated Successfully"),
+                        content: Text("Notice Updated Successfully"),
                       ),
                     );
                     setState(() {
@@ -161,14 +160,46 @@ class _UpdateNoticeScreenState extends State<UpdateNoticeScreen> {
                 const SizedBox(
                   height: 18,
                 ),
+                FormField<String>(
+                  builder: (FormFieldState<String> state) {
+                    return InputDecorator(
+                      decoration: InputDecoration(
+                          hintText: 'Please select type of notice',
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(5.0))),
+                      isEmpty: _currentSelectedValue == '',
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _currentSelectedValue,
+                          isDense: true,
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              _currentSelectedValue =
+                                  newValue ?? "Announcement";
+                            });
+                          },
+                          items: type_of_notice.map((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(
+                  height: 18,
+                ),
 
-                /// displaying list of files we got from resource screen
+                /// displaying list of files we got from Notice screen
                 ListView.builder(
                   itemCount: widget.notice.files?.length,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemBuilder: (context, index) => buildFileCard(
-                    resourceFile: widget.notice.files![index],
+                    noticeFile: widget.notice.files![index],
                   ),
                 ),
 
@@ -204,7 +235,7 @@ class _UpdateNoticeScreenState extends State<UpdateNoticeScreen> {
     );
   }
 
-  buildFileCard({PlatformFile? file, FileData? resourceFile}) {
+  buildFileCard({PlatformFile? file, FileData? noticeFile}) {
     String name_of_file = "";
     String size_of_file = "";
     String type_of_file = "";
@@ -213,9 +244,9 @@ class _UpdateNoticeScreenState extends State<UpdateNoticeScreen> {
       size_of_file = filesize(file.size);
       type_of_file = ".${file.extension}";
     } else {
-      name_of_file = resourceFile?.nameOfFile ?? "";
-      size_of_file = filesize(resourceFile?.sizeOfFile);
-      type_of_file = resourceFile?.typeOfFile ?? "";
+      name_of_file = noticeFile?.nameOfFile ?? "";
+      size_of_file = filesize(noticeFile?.sizeOfFile);
+      type_of_file = noticeFile?.typeOfFile ?? "";
     }
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -231,10 +262,10 @@ class _UpdateNoticeScreenState extends State<UpdateNoticeScreen> {
               onTap: () async {
                 if (file != null) {
                   OpenFile.open(file.path);
-                } else if (resourceFile != null) {
+                } else if (noticeFile != null) {
                   showLoaderDialog(context);
                   File file = await DefaultCacheManager()
-                      .getSingleFile(resourceFile.downloadUrl!);
+                      .getSingleFile(noticeFile.downloadUrl!);
                   Navigator.pop(context);
                   OpenFile.open(file.path);
                 } else {
@@ -278,8 +309,8 @@ class _UpdateNoticeScreenState extends State<UpdateNoticeScreen> {
                 if (file != null) {
                   _pickedFiles.remove(file);
                 } else {
-                  widget.notice.files?.remove(resourceFile);
-                  deletedFiles.add(resourceFile!);
+                  widget.notice.files?.remove(noticeFile);
+                  deletedFiles.add(noticeFile!);
                 }
               });
             },

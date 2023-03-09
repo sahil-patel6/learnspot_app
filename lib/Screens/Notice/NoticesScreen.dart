@@ -1,25 +1,24 @@
 import 'package:file_icon/file_icon.dart';
 import 'package:filesize/filesize.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_cache_manager/file.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:intl/intl.dart';
-import 'package:lms_app/Models/Notice.dart';
-import 'package:lms_app/Models/Subject.dart';
 import 'package:lms_app/Screens/Notice/UpdateNoticeScreen.dart';
 import 'package:lms_app/Services/NoticeService.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 
 import '../../Models/FileData.dart';
+import '../../Models/Notice.dart';
 import '../../Models/User.dart';
 import '../../preferences.dart';
 import '../../utils/showLoaderDialog.dart';
 import 'AddNoticeScreen.dart';
 
 class NoticesScreen extends StatefulWidget {
-  final Subject subject;
+  final String semester_id;
+  final User user;
 
-  const NoticesScreen({Key? key, required this.subject}) : super(key: key);
+  const NoticesScreen({Key? key, required this.semester_id,required this.user}) : super(key: key);
 
   @override
   State<NoticesScreen> createState() => _NoticesScreenState();
@@ -29,7 +28,6 @@ class _NoticesScreenState extends State<NoticesScreen> {
   bool isLoading = false;
   String error = "";
 
-  User? user;
   List<Notice> notices = [];
 
   getData() async {
@@ -39,8 +37,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
       notices.clear();
     });
     try {
-      user = await Preferences.getUser();
-      notices = await NoticeService.get_notices((widget.subject.semester?.id)!);
+      notices = await NoticeService.get_notices(widget.semester_id);
       print(notices);
     } catch (e) {
       setState(() {
@@ -92,26 +89,28 @@ class _NoticesScreenState extends State<NoticesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: widget.user.type_of_user != "Student" ? AppBar(
         title: const Text("All Notices"),
-      ),
-      body: buildBody(),
-      floatingActionButton: user != null && user?.type_of_user == "Teacher" ?FloatingActionButton(
-        onPressed: () async {
-          Notice? notice = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AddNoticeScreen(widget.subject),
-            ),
-          );
-          if (notice != null) {
-            setState(() {
-              notices.add(notice);
-            });
-          }
-        },
-        child: const Icon(Icons.add),
       ) : null,
+      body: buildBody(),
+      floatingActionButton: widget.user.type_of_user == "Teacher"
+          ? FloatingActionButton(
+              onPressed: () async {
+                Notice? notice = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddNoticeScreen(widget.semester_id),
+                  ),
+                );
+                if (notice != null) {
+                  setState(() {
+                    notices.add(notice);
+                  });
+                }
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 
@@ -157,12 +156,18 @@ class _NoticesScreenState extends State<NoticesScreen> {
             height: 10,
           ),
           buildNoticeCardRow(
-            "Due Date:  ",
+            "Date:  ",
             DateFormat("dd MMM, yyyy, HH:mm").format(
               DateTime.parse(
                 notice.date!,
               ).toLocal(),
             ),
+          ),const SizedBox(
+            height: 10,
+          ),
+          buildNoticeCardRow(
+            "Type:  ",
+            notice.type!,
           ),
           const SizedBox(
             height: 10,
@@ -179,7 +184,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
               ],
             ),
           ),
-          if (user?.type_of_user == "Teacher")
+          if (widget.user.type_of_user == "Teacher")
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -188,8 +193,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
                     Notice? updatedNotice = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            UpdateNoticeScreen(widget.subject, notice),
+                        builder: (context) => UpdateNoticeScreen(notice),
                       ),
                     );
                     if (updatedNotice != null) {
@@ -200,7 +204,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
                   },
                   child: const Text("Update"),
                 ),
-                DeleteNoticeButton(notice, removeAssignment),
+                DeleteNoticeButton(notice, removeNotice),
               ],
             )
         ],
@@ -208,7 +212,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
     );
   }
 
-  removeAssignment(Notice notice) {
+  removeNotice(Notice notice) {
     setState(() {
       notices.remove(notice);
     });

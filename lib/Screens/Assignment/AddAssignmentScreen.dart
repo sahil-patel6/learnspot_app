@@ -18,7 +18,8 @@ import '../../Services/AssignmentService.dart';
 class AddAssignmentScreen extends StatefulWidget {
   final Subject subject;
 
-  const AddAssignmentScreen(this.subject, {Key? key}) : super(key: key);
+  const AddAssignmentScreen({Key? key, required this.subject})
+      : super(key: key);
 
   @override
   State<AddAssignmentScreen> createState() => _AddAssignmentScreenState();
@@ -32,6 +33,7 @@ class _AddAssignmentScreenState extends State<AddAssignmentScreen> {
   TextEditingController marksController = TextEditingController();
   TextEditingController dateController = TextEditingController(
       text: DateTime.now().add(const Duration(minutes: 30)).toString());
+  bool isSubmissionAllowed = true;
 
   List<PlatformFile> pickedFiles = [];
 
@@ -86,7 +88,7 @@ class _AddAssignmentScreenState extends State<AddAssignmentScreen> {
                       subject: widget.subject.id,
                       dueDate: dueDate.toUtc().toIso8601String(),
                       marks: int.parse(marksController.text),
-                      isSubmissionAllowed: true,
+                      isSubmissionAllowed: isSubmissionAllowed,
                       assignmentQuestionFiles: [],
                     );
                     final storage = FirebaseStorage.instance;
@@ -193,6 +195,27 @@ class _AddAssignmentScreenState extends State<AddAssignmentScreen> {
                 ),
                 const SizedBox(
                   height: 18,
+                ),
+                Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: const Color(0xFFD3D3D3)),
+                  padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Submission Allowed: ", style: TextStyle(fontSize: 18),),
+                      Switch(
+                        value: isSubmissionAllowed,
+                        onChanged: (val) {
+                          setState(() {
+                            isSubmissionAllowed = val;
+                          });
+                        },
+                      )
+                    ],
+                  ),
                 ),
                 DateTimePicker(
                   type: DateTimePickerType.dateTime,

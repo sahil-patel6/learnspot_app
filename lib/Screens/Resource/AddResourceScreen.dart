@@ -16,7 +16,7 @@ import '../../Models/Resource.dart';
 class AddResourceScreen extends StatefulWidget {
   final Subject subject;
 
-  const AddResourceScreen(this.subject, {Key? key}) : super(key: key);
+  const AddResourceScreen({Key? key,required this.subject}) : super(key: key);
 
   @override
   State<AddResourceScreen> createState() => _AddResourceScreenState();

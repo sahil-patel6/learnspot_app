@@ -1,13 +1,11 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 
 import '../Models/User.dart';
 import '../preferences.dart';
 import 'ParentHomeScreen.dart';
+import 'SignInScreen.dart';
 import 'StudentHomeScreen.dart';
 import 'TeacherHomeScreen.dart';
-import 'SignInScreen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -18,6 +16,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   String token = "";
+
   checkIfUserExists() async {
     final User? user = await Preferences.getUser();
     if (user == null) {
@@ -58,10 +57,31 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Colors.green,
+    return Scaffold(
+      backgroundColor: Colors.black,
       body: Center(
-        child: CircularProgressIndicator(backgroundColor: Colors.black),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(200),
+                color: Colors.white10,
+              ),
+              child: Image.asset(
+                "assets/images/learnspot_logo.png",
+                height: 200,
+                width: 200,
+              ),
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            const CircularProgressIndicator(
+              color: Colors.green,
+            ),
+          ],
+        ),
       ),
     );
   }
