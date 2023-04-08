@@ -34,7 +34,7 @@ class Student {
     address = json['address'];
     profilePic = json['profile_pic'];
     fcsProfilePicPath = json['fcs_profile_pic_path'];
-    semester = json['semester'] != null && json["semester"] is Semester
+    semester = json['semester'] != null && json["semester"] is Map<String,dynamic>
         ? Semester.fromJson(json['semester'])
         : null;
   }

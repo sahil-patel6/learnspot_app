@@ -43,7 +43,7 @@ class _AssignmentsScreenState extends State<AssignmentsScreen> {
       print(assignments);
     } catch (e) {
       setState(() {
-        error = e.toString();
+        error = e.toString().replaceFirst("Exception: ", "");
       });
     }
     setState(() {
@@ -339,9 +339,9 @@ class _DeleteAssignmentButtonState extends State<DeleteAssignmentButton> {
             ),
           );
         } catch (e) {
-          print(e.toString());
+          print(e.toString().replaceFirst("Exception: ", ""));
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(e.toString()),
+            content: Text(e.toString().replaceFirst("Exception: ", "")),
           ));
         }
         setState(() {

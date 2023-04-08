@@ -41,7 +41,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
       subjects = await StudentHomeScreenService.get_subjects_list_per_student();
     } catch (e) {
       setState(() {
-        error = e.toString();
+        error = e.toString().replaceFirst("Exception: ", "");
       });
     }
     setState(() {

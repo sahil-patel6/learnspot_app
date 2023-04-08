@@ -10,7 +10,6 @@ import 'package:open_file_plus/open_file_plus.dart';
 import '../../Models/FileData.dart';
 import '../../Models/Notice.dart';
 import '../../Models/User.dart';
-import '../../preferences.dart';
 import '../../utils/showLoaderDialog.dart';
 import 'AddNoticeScreen.dart';
 
@@ -18,7 +17,8 @@ class NoticesScreen extends StatefulWidget {
   final String semester_id;
   final User user;
 
-  const NoticesScreen({Key? key, required this.semester_id,required this.user}) : super(key: key);
+  const NoticesScreen({Key? key, required this.semester_id, required this.user})
+      : super(key: key);
 
   @override
   State<NoticesScreen> createState() => _NoticesScreenState();
@@ -41,7 +41,7 @@ class _NoticesScreenState extends State<NoticesScreen> {
       print(notices);
     } catch (e) {
       setState(() {
-        error = e.toString();
+        error = e.toString().replaceFirst("Exception: ", "");
       });
     }
     setState(() {
@@ -89,9 +89,11 @@ class _NoticesScreenState extends State<NoticesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: widget.user.type_of_user != "Student" ? AppBar(
-        title: const Text("All Notices"),
-      ) : null,
+      appBar: widget.user.type_of_user != "Student"
+          ? AppBar(
+              title: const Text("All Notices"),
+            )
+          : null,
       body: buildBody(),
       floatingActionButton: widget.user.type_of_user == "Teacher"
           ? FloatingActionButton(
@@ -114,7 +116,21 @@ class _NoticesScreenState extends State<NoticesScreen> {
     );
   }
 
-  buildNoticeCardRow(String title, String text) {
+  buildNoticeTypeCardBadge(String text) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.green,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      child: Text(
+        text,
+        style: const TextStyle(fontSize: 16, color: Colors.white),
+      ),
+    );
+  }
+
+  buildNoticeCardRow(String title, String text, {bool type_badge = false}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.start,
@@ -124,14 +140,16 @@ class _NoticesScreenState extends State<NoticesScreen> {
           title,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        Flexible(
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontSize: 18,
-            ),
-          ),
-        ),
+        type_badge
+            ? buildNoticeTypeCardBadge(text)
+            : Flexible(
+                child: Text(
+                  text,
+                  style: const TextStyle(
+                    fontSize: 18,
+                  ),
+                ),
+              ),
       ],
     );
   }
@@ -162,12 +180,14 @@ class _NoticesScreenState extends State<NoticesScreen> {
                 notice.date!,
               ).toLocal(),
             ),
-          ),const SizedBox(
+          ),
+          const SizedBox(
             height: 10,
           ),
           buildNoticeCardRow(
             "Type:  ",
             notice.type!,
+            type_badge: true,
           ),
           const SizedBox(
             height: 10,
@@ -313,9 +333,9 @@ class _DeleteNoticeButtonState extends State<DeleteNoticeButton> {
             ),
           );
         } catch (e) {
-          print(e.toString());
+          print(e.toString().replaceFirst("Exception: ", ""));
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(e.toString()),
+            content: Text(e.toString().replaceFirst("Exception: ", "")),
           ));
         }
         setState(() {

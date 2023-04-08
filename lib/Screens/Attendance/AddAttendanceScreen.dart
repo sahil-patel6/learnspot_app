@@ -77,7 +77,7 @@ class _AddAttendanceScreenState extends State<AddAttendanceScreen> {
       print(students);
     } catch (e) {
       setState(() {
-        error = e.toString();
+        error = e.toString().replaceFirst("Exception: ", "");
       });
     }
     setState(() {
@@ -215,6 +215,14 @@ class _AddAttendanceScreenState extends State<AddAttendanceScreen> {
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   try {
+
+                    if (startTime == null || endTime == null){
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content:
+                        Text("Start Time and End Time is required"),
+                      ));
+                      return;
+                    }
                     setState(() {
                       isUploadingAttendance = true;
                     });
@@ -256,7 +264,7 @@ class _AddAttendanceScreenState extends State<AddAttendanceScreen> {
                   } catch (e) {
                     print(e);
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(e.toString()),
+                      content: Text(e.toString().replaceFirst("Exception: ", "")),
                     ));
                     setState(() {
                       isLoading = false;

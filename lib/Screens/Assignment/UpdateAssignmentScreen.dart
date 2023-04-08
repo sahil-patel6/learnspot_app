@@ -146,7 +146,7 @@ class _UpdateAssignmentScreenState extends State<UpdateAssignmentScreen> {
                   } catch (e) {
                     print(e);
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(e.toString()),
+                      content: Text(e.toString().replaceFirst("Exception: ", "")),
                     ));
                   }
                 }
