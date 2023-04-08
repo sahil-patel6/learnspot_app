@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:lms_app/Services/ProfileService.dart';
+import 'package:validatorless/validatorless.dart';
 
 import '../Models/User.dart';
 import '../preferences.dart';
@@ -32,7 +33,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       user = await ProfileService.get_profile();
     } catch (e) {
       setState(() {
-        error = e.toString();
+        error = e.toString().replaceFirst("Exception: ", "");
       });
     }
     setState(() {
@@ -64,6 +65,104 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } else {
       return const Icon(Icons.account_circle, size: 200);
     }
+  }
+
+  updatePassword() {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        String errorMessage = "";
+        final formKey = GlobalKey<FormState>();
+        TextEditingController currentPasswordController =
+            TextEditingController();
+        TextEditingController newPasswordController = TextEditingController();
+
+        return StatefulBuilder(
+          builder: (ctx, setState) {
+            setErrorMessage(String error) {
+              print("SETERROR");
+              setState(() {
+                errorMessage = error.replaceFirst("Exception: ", "");
+              });
+              print(errorMessage);
+            }
+
+            return AlertDialog(
+              title: const Text("Update Password"),
+              actions: [
+                UpdatePasswordButton(
+                  user!,
+                  formKey,
+                  currentPasswordController,
+                  newPasswordController,
+                  setErrorMessage,
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Cancel"),
+                )
+              ],
+              content: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (errorMessage.isNotEmpty)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 10),
+                        decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(5)),
+                        child: Text(
+                          errorMessage,
+                          style: const TextStyle(
+                              fontSize: 18, color: Colors.white),
+                        ),
+                      ),
+                    if (errorMessage.isNotEmpty)
+                      const SizedBox(
+                        height: 18,
+                      ),
+                    TextFormField(
+                      controller: currentPasswordController,
+                      validator: Validatorless.multiple([
+                        Validatorless.required('Current Password is required'),
+                        Validatorless.min(8,
+                            'Curent Password should atleast contain 8 characters'),
+                      ]),
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: "Current Password:",
+                        labelText: "Current Password:",
+                      ),
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 18),
+                    TextFormField(
+                      controller: newPasswordController,
+                      validator: Validatorless.multiple([
+                        Validatorless.required('Current Password is required'),
+                        Validatorless.min(8,
+                            'Curent Password should atleast contain 8 characters'),
+                      ]),
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: "New Password:",
+                        labelText: "New Password:",
+                      ),
+                      obscureText: true,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -117,6 +216,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       buildContainer("Bio:", user?.bio ?? ""),
                       buildContainer("Address:", user?.address ?? ""),
                       ElevatedButton(
+                        onPressed: updatePassword,
+                        child: const Text(
+                          "Update Password",
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 18,
+                      ),
+                      ElevatedButton(
                         onPressed: () async {
                           await Preferences.removeUser();
                           await DefaultCacheManager().emptyCache();
@@ -157,6 +265,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Text(text, style: const TextStyle(fontSize: 18)),
         ],
       ),
+    );
+  }
+}
+
+class UpdatePasswordButton extends StatefulWidget {
+  User user;
+  GlobalKey<FormState> formkey;
+  TextEditingController currentPassword;
+  TextEditingController newPassword;
+  Function setErrorMessage;
+
+  UpdatePasswordButton(this.user, this.formkey, this.currentPassword,
+      this.newPassword, this.setErrorMessage,
+      {Key? key})
+      : super(key: key);
+
+  @override
+  State<UpdatePasswordButton> createState() => _UpdatePasswordButtonState();
+}
+
+class _UpdatePasswordButtonState extends State<UpdatePasswordButton> {
+  bool isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () async {
+        setState(() {
+          isLoading = true;
+        });
+        try {
+          if (widget.formkey.currentState!.validate()) {
+            User user = await ProfileService.update_password(widget.user,
+                widget.currentPassword.text, widget.newPassword.text);
+            print(user);
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Password Updated Successfully"),
+              ),
+            );
+          }
+        } catch (e) {
+          print(e.toString().replaceFirst("Exception: ", ""));
+          widget.setErrorMessage(e.toString().replaceFirst("Exception: ", ""));
+          // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          //   content: Text(e.toString().replaceFirst("Exception: ", "")),
+          // ));
+        }
+        setState(() {
+          isLoading = false;
+        });
+      },
+      child: isLoading
+          ? const SizedBox(
+              width: 15,
+              height: 15,
+              child: CircularProgressIndicator(
+                color: Colors.white,
+              ),
+            )
+          : const Text("Update Password"),
     );
   }
 }

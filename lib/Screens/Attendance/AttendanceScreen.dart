@@ -46,7 +46,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       print(attendance_sessions);
     } catch (e) {
       setState(() {
-        error = e.toString();
+        error = e.toString().replaceFirst("Exception: ", "");
       });
     }
     setState(() {
@@ -94,7 +94,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: widget.user.type_of_user == "Teacher"
+      appBar: widget.user.type_of_user != "Student"
           ? AppBar(
               title: const Text("Attendance"),
             )
@@ -198,7 +198,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         color: widget.user.type_of_user == "Teacher" ? const Color(0xFFD3D3D3) :
         (attendance_session.attendances
             ?.firstWhere((attendance) =>
-        attendance.student?.id == widget.user.id)
+        attendance.student?.id == (widget.student != null ? widget.student?.id : widget.user.id))
             .present)!
             ? Colors.green
             : Colors.red,
@@ -208,7 +208,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // if (widget.user.type_of_user == "Student")
+          if (widget.user.type_of_user != "Teacher")
           buildAttendanceSessionCardRow(
             "Subject Name:  ",
             (attendance_session.subject?.name)!,
@@ -383,9 +383,9 @@ class _DeleteAttendanceSessionButtonState
             ),
           );
         } catch (e) {
-          print(e.toString());
+          print(e.toString().replaceFirst("Exception: ", ""));
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(e.toString()),
+            content: Text(e.toString().replaceFirst("Exception: ", "")),
           ));
         }
         setState(() {

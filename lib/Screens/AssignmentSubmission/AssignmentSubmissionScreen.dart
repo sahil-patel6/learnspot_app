@@ -47,7 +47,7 @@ class _AssignmentSubmissionScreenState
       print(assignment_submissions);
     } catch (e) {
       setState(() {
-        error = e.toString();
+        error = e.toString().replaceFirst("Exception: ", "");
       });
     }
     setState(() {
@@ -351,9 +351,9 @@ class _DeleteAssignmentSubmissionButtonState
             ),
           );
         } catch (e) {
-          print(e.toString());
+          print(e.toString().replaceFirst("Exception: ", ""));
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(e.toString()),
+            content: Text(e.toString().replaceFirst("Exception: ", "")),
           ));
         }
         setState(() {

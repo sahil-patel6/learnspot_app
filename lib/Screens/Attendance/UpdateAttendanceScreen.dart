@@ -209,7 +209,7 @@ class _UpdateAttendanceScreenState extends State<UpdateAttendanceScreen> {
                   } catch (e) {
                     print(e);
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(e.toString()),
+                      content: Text(e.toString().replaceFirst("Exception: ", "")),
                     ));
                     setState(() {
                       isLoading = false;

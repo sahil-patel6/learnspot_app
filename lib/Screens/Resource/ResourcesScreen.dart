@@ -41,7 +41,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
       print(resources);
     } catch (e) {
       setState(() {
-        error = e.toString();
+        error = e.toString().replaceFirst("Exception: ", "");
       });
     }
     setState(() {
@@ -299,9 +299,9 @@ class _DeleteResourceButtonState extends State<DeleteResourceButton> {
             ),
           );
         } catch (e) {
-          print(e.toString());
+          print(e.toString().replaceFirst("Exception: ", ""));
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(e.toString()),
+            content: Text(e.toString().replaceFirst("Exception: ", "")),
           ));
         }
         setState(() {

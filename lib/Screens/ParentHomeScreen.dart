@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:lms_app/Screens/ChildDetailScreen.dart';
 import 'package:lms_app/Services/ParentHomeScreenService.dart';
 import 'package:lms_app/utils/requestNotfificationsPermission.dart';
 
@@ -34,7 +35,7 @@ class _ParentHomeScreenState extends State<ParentHomeScreen> {
       children = await ParentHomeScreenService.get_students_by_parent();
     } catch (e) {
       setState(() {
-        error = e.toString();
+        error = e.toString().replaceFirst("Exception: ", "");
       });
     }
     setState(() {
@@ -132,15 +133,15 @@ class _ParentHomeScreenState extends State<ParentHomeScreen> {
                           itemBuilder: (context, index) {
                             return InkWell(
                               onTap: () {
-                                // Navigator.push(
-                                //   context,
-                                //   MaterialPageRoute(
-                                //     builder: (context) => SubjectDetailScreen(
-                                //       subject: students[index],
-                                //       user: widget.user,
-                                //     ),
-                                //   ),
-                                // );
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ChildDetailScreen(
+                                      student: children[index],
+                                      user: widget.user,
+                                    ),
+                                  ),
+                                );
                               },
                               child: buildChildCard(children[index]),
                             );

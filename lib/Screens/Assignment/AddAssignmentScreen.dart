@@ -131,7 +131,7 @@ class _AddAssignmentScreenState extends State<AddAssignmentScreen> {
                   } catch (e) {
                     print(e);
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(e.toString()),
+                      content: Text(e.toString().replaceFirst("Exception: ", "")),
                     ));
                   }
                 }

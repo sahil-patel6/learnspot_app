@@ -42,9 +42,12 @@ class AttendanceService {
     String temp = "";
     if (subject != null){
       temp="subject=${subject.id!}";
-    }else if (user.type_of_user == ""){
-      temp="student/$student_id";
+    }else{
+      temp="student=$student_id";
     }
+    print(Uri.parse(
+      "${API.GET_ATTENDANCE_SESSIONS(user.id!, (user.type_of_user?.toLowerCase())!)}?start_date=$currentDate&end_date=$currentDate&$temp",
+    ).toString());
     print("user.name");
     final http.Response response = await http.get(
       Uri.parse(

@@ -107,7 +107,7 @@ class _AddNoticeScreenState extends State<AddNoticeScreen> {
                   } catch (e) {
                     print(e);
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(e.toString()),
+                      content: Text(e.toString().replaceFirst("Exception: ", "")),
                     ));
                     setState(() {
                       isLoading = false;
