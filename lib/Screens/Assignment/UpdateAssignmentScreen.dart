@@ -10,6 +10,7 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:intl/intl.dart';
 import 'package:lms_app/Models/Assignment.dart';
 import 'package:lms_app/Services/AssignmentService.dart';
+import 'package:lms_app/utils/showConfirmationDialog.dart';
 import 'package:lms_app/utils/showLoaderDialog.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:validatorless/validatorless.dart';
@@ -52,8 +53,7 @@ class _UpdateAssignmentScreenState extends State<UpdateAssignmentScreen> {
     descriptionController.text = widget.assignment.description ?? "";
     marksController.text = widget.assignment.marks.toString();
     isSubmissionAllowed = widget.assignment.isSubmissionAllowed ?? true;
-    dueDate =
-        DateTime.parse(widget.assignment.dueDate.toString()).toLocal();
+    dueDate = DateTime.parse(widget.assignment.dueDate.toString()).toLocal();
     dateController.text = dueDate.toString();
   }
 
@@ -93,6 +93,9 @@ class _UpdateAssignmentScreenState extends State<UpdateAssignmentScreen> {
                               "Assignment Due Date should have atleast 30 minutes time"),
                         ),
                       );
+                      return;
+                    }
+                    if (await showConfirmationDialog(context) ?? false) {
                       return;
                     }
                     setState(() {
@@ -146,7 +149,8 @@ class _UpdateAssignmentScreenState extends State<UpdateAssignmentScreen> {
                   } catch (e) {
                     print(e);
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(e.toString().replaceFirst("Exception: ", "")),
+                      content:
+                          Text(e.toString().replaceFirst("Exception: ", "")),
                     ));
                   }
                 }
@@ -214,11 +218,15 @@ class _UpdateAssignmentScreenState extends State<UpdateAssignmentScreen> {
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
                       color: const Color(0xFFD3D3D3)),
-                  padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("Submission Allowed: ", style: TextStyle(fontSize: 18),),
+                      const Text(
+                        "Submission Allowed: ",
+                        style: TextStyle(fontSize: 18),
+                      ),
                       Switch(
                         value: isSubmissionAllowed,
                         onChanged: (val) {

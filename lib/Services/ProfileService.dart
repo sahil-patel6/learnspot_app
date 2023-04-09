@@ -77,4 +77,24 @@ class ProfileService {
       throw Exception(jsonDecode(response.body)["error"]);
     }
   }
+
+  static Future<String> logout() async {
+    User user = await Preferences.getUser();
+    final http.Response response = await http.get(
+      Uri.parse(API.LOGOUT_USER(
+          user.id!, (user.type_of_user?.toLowerCase())!)),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer ${user.token!}'
+      },
+    );
+    if (response.statusCode == 200) {
+      print(jsonDecode(response.body));
+      String message = jsonDecode(response.body)["message"];
+      return message;
+    } else {
+      print(jsonDecode(response.body));
+      throw Exception(jsonDecode(response.body)["error"]);
+    }
+  }
 }

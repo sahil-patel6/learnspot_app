@@ -8,6 +8,7 @@ import 'package:lms_app/Services/AttendanceService.dart';
 import '../../Models/AttendanceSession.dart';
 import '../../Models/Student.dart';
 import '../../Models/User.dart';
+import '../../utils/showConfirmationDialog.dart';
 import 'UpdateAttendanceScreen.dart';
 
 class AttendanceScreen extends StatefulWidget {
@@ -195,13 +196,17 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        color: widget.user.type_of_user == "Teacher" ? const Color(0xFFD3D3D3) :
-        (attendance_session.attendances
-            ?.firstWhere((attendance) =>
-        attendance.student?.id == (widget.student != null ? widget.student?.id : widget.user.id))
-            .present)!
-            ? Colors.green
-            : Colors.red,
+        color: widget.user.type_of_user == "Teacher"
+            ? const Color(0xFFD3D3D3)
+            : (attendance_session.attendances
+                    ?.firstWhere((attendance) =>
+                        attendance.student?.id ==
+                        (widget.student != null
+                            ? widget.student?.id
+                            : widget.user.id))
+                    .present)!
+                ? Colors.green
+                : Colors.red,
       ),
       padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
       child: Column(
@@ -209,10 +214,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (widget.user.type_of_user != "Teacher")
-          buildAttendanceSessionCardRow(
-            "Subject Name:  ",
-            (attendance_session.subject?.name)!,
-          ),
+            buildAttendanceSessionCardRow(
+              "Subject Name:  ",
+              (attendance_session.subject?.name)!,
+            ),
           const SizedBox(
             height: 10,
           ),
@@ -367,31 +372,33 @@ class _DeleteAttendanceSessionButtonState
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () async {
-        setState(() {
-          isLoading = true;
-        });
-        try {
-          String response = await AttendanceService.delete_attendance_session(
-            widget.attendanceSession.id!,
-          );
-          print(response);
-          widget.removeAttendanceSession(widget.attendanceSession);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response),
-            ),
-          );
-        } catch (e) {
-          print(e.toString().replaceFirst("Exception: ", ""));
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(e.toString().replaceFirst("Exception: ", "")),
-          ));
+      onPressed: !isLoading ?() async {
+        if (await showConfirmationDialog(context) ?? false) {
+          setState(() {
+            isLoading = true;
+          });
+          try {
+            String response = await AttendanceService.delete_attendance_session(
+              widget.attendanceSession.id!,
+            );
+            print(response);
+            widget.removeAttendanceSession(widget.attendanceSession);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(response),
+              ),
+            );
+          } catch (e) {
+            print(e.toString().replaceFirst("Exception: ", ""));
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(e.toString().replaceFirst("Exception: ", "")),
+            ));
+          }
+          setState(() {
+            isLoading = false;
+          });
         }
-        setState(() {
-          isLoading = false;
-        });
-      },
+      }: (){},
       child: isLoading
           ? Center(
               child: Container(

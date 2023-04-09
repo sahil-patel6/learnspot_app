@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lms_app/Models/FileData.dart';
 import 'package:lms_app/Models/Subject.dart';
+import 'package:lms_app/utils/showConfirmationDialog.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:validatorless/validatorless.dart';
 
@@ -76,6 +77,9 @@ class _AddAssignmentScreenState extends State<AddAssignmentScreen> {
                               "Assignment Due Date should have atleast 30 minutes time"),
                         ),
                       );
+                      return;
+                    }
+                    if (await showConfirmationDialog(context) ?? false){
                       return;
                     }
                     setState(() {

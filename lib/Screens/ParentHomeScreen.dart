@@ -55,9 +55,12 @@ class _ParentHomeScreenState extends State<ParentHomeScreen> {
       return CachedNetworkImage(
         imageUrl: widget.user.profilePic!,
         progressIndicatorBuilder: (context, url, downloadProgress) =>
-            CircularProgressIndicator(value: downloadProgress.progress),
+            CircularProgressIndicator(
+              value: downloadProgress.progress,
+              color: Colors.white,
+            ),
         errorWidget: (context, url, error) =>
-            const Icon(Icons.account_circle, size: 35),
+        const Icon(Icons.account_circle, size: 35),
         width: 35,
         height: 35,
         fit: BoxFit.cover,
@@ -66,6 +69,7 @@ class _ParentHomeScreenState extends State<ParentHomeScreen> {
       return const Icon(Icons.account_circle, size: 35);
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

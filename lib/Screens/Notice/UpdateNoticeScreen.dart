@@ -13,6 +13,7 @@ import 'package:validatorless/validatorless.dart';
 
 import '../../Models/FileData.dart';
 import '../../Models/Notice.dart';
+import '../../utils/showConfirmationDialog.dart';
 
 class UpdateNoticeScreen extends StatefulWidget {
   final Notice notice;
@@ -65,7 +66,8 @@ class _UpdateNoticeScreenState extends State<UpdateNoticeScreen> {
           else
             IconButton(
               onPressed: () async {
-                if (formKey.currentState!.validate()) {
+                if (formKey.currentState!.validate()&&
+                    (await showConfirmationDialog(context) ?? false)) {
                   try {
                     setState(() {
                       isLoading = true;

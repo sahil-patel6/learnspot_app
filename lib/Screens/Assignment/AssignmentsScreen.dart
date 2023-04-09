@@ -8,6 +8,7 @@ import 'package:lms_app/Models/Subject.dart';
 import 'package:lms_app/Screens/Assignment/AddAssignmentScreen.dart';
 import 'package:lms_app/Screens/AssignmentSubmission/AssignmentSubmissionScreen.dart';
 import 'package:lms_app/Services/AssignmentService.dart';
+import 'package:lms_app/utils/showConfirmationDialog.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 
 import '../../Models/FileData.dart';
@@ -321,33 +322,38 @@ class _DeleteAssignmentButtonState extends State<DeleteAssignmentButton> {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () async {
-        setState(() {
-          isLoading = true;
-        });
-        try {
-          String response =
-              await AssignmentService.delete_assignment(widget.assignment.id!);
-          print(response);
-          widget.removeAssignment(widget.assignment);
-          widget.assignment.assignmentQuestionFiles?.forEach((file) async {
-            await DefaultCacheManager().removeFile(file.downloadUrl!);
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response),
-            ),
-          );
-        } catch (e) {
-          print(e.toString().replaceFirst("Exception: ", ""));
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(e.toString().replaceFirst("Exception: ", "")),
-          ));
-        }
-        setState(() {
-          isLoading = false;
-        });
-      },
+      onPressed: !isLoading
+          ? () async {
+              if (await showConfirmationDialog(context) ?? false) {
+                setState(() {
+                  isLoading = true;
+                });
+                try {
+                  String response = await AssignmentService.delete_assignment(
+                      widget.assignment.id!);
+                  print(response);
+                  widget.removeAssignment(widget.assignment);
+                  widget.assignment.assignmentQuestionFiles
+                      ?.forEach((file) async {
+                    await DefaultCacheManager().removeFile(file.downloadUrl!);
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(response),
+                    ),
+                  );
+                } catch (e) {
+                  print(e.toString().replaceFirst("Exception: ", ""));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(e.toString().replaceFirst("Exception: ", "")),
+                  ));
+                }
+                setState(() {
+                  isLoading = false;
+                });
+              }
+            }
+          : () {},
       child: isLoading
           ? Center(
               child: Container(
