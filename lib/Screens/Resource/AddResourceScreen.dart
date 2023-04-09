@@ -12,11 +12,12 @@ import 'package:validatorless/validatorless.dart';
 
 import '../../Models/FileData.dart';
 import '../../Models/Resource.dart';
+import '../../utils/showConfirmationDialog.dart';
 
 class AddResourceScreen extends StatefulWidget {
   final Subject subject;
 
-  const AddResourceScreen({Key? key,required this.subject}) : super(key: key);
+  const AddResourceScreen({Key? key, required this.subject}) : super(key: key);
 
   @override
   State<AddResourceScreen> createState() => _AddResourceScreenState();
@@ -53,7 +54,8 @@ class _AddResourceScreenState extends State<AddResourceScreen> {
             IconButton(
               onPressed: () async {
                 if (formKey.currentState!.validate() &&
-                    pickedFiles.isNotEmpty) {
+                    pickedFiles.isNotEmpty &&
+                    (await showConfirmationDialog(context) ?? false)) {
                   try {
                     setState(() {
                       isLoading = true;
@@ -104,7 +106,8 @@ class _AddResourceScreenState extends State<AddResourceScreen> {
                   } catch (e) {
                     print(e);
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(e.toString().replaceFirst("Exception: ", "")),
+                      content:
+                          Text(e.toString().replaceFirst("Exception: ", "")),
                     ));
                   }
                 }

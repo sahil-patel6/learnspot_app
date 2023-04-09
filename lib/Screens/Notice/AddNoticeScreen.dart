@@ -5,8 +5,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:filesize/filesize.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:lms_app/Models/Subject.dart';
 import 'package:lms_app/Services/NoticeService.dart';
+import 'package:lms_app/utils/showConfirmationDialog.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:validatorless/validatorless.dart';
 
@@ -55,7 +55,8 @@ class _AddNoticeScreenState extends State<AddNoticeScreen> {
           else
             IconButton(
               onPressed: () async {
-                if (formKey.currentState!.validate()) {
+                if (formKey.currentState!.validate() &&
+                    (await showConfirmationDialog(context) ?? false)) {
                   try {
                     setState(() {
                       isLoading = true;
@@ -89,8 +90,8 @@ class _AddNoticeScreenState extends State<AddNoticeScreen> {
                         );
                       }
                     }
-                    Notice createdNotice = await NoticeService.create_notice(
-                        notice);
+                    Notice createdNotice =
+                        await NoticeService.create_notice(notice);
                     // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -107,7 +108,8 @@ class _AddNoticeScreenState extends State<AddNoticeScreen> {
                   } catch (e) {
                     print(e);
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(e.toString().replaceFirst("Exception: ", "")),
+                      content:
+                          Text(e.toString().replaceFirst("Exception: ", "")),
                     ));
                     setState(() {
                       isLoading = false;

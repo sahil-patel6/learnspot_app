@@ -5,6 +5,7 @@ import 'package:lms_app/Models/Subject.dart';
 import '../../Models/AttendanceSession.dart';
 import '../../Models/Student.dart';
 import '../../Services/AttendanceService.dart';
+import '../../utils/showConfirmationDialog.dart';
 
 class AddAttendanceScreen extends StatefulWidget {
   final Subject subject;
@@ -215,12 +216,13 @@ class _AddAttendanceScreenState extends State<AddAttendanceScreen> {
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   try {
-
-                    if (startTime == null || endTime == null){
+                    if (startTime == null || endTime == null) {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                        content:
-                        Text("Start Time and End Time is required"),
+                        content: Text("Start Time and End Time is required"),
                       ));
+                      return;
+                    }
+                    if (!(await showConfirmationDialog(context) ?? false)) {
                       return;
                     }
                     setState(() {
@@ -264,7 +266,8 @@ class _AddAttendanceScreenState extends State<AddAttendanceScreen> {
                   } catch (e) {
                     print(e);
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(e.toString().replaceFirst("Exception: ", "")),
+                      content:
+                          Text(e.toString().replaceFirst("Exception: ", "")),
                     ));
                     setState(() {
                       isLoading = false;

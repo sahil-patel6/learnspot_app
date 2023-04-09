@@ -6,6 +6,7 @@ import 'package:filesize/filesize.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:lms_app/Services/AssignmentSubmissionService.dart';
+import 'package:lms_app/utils/showConfirmationDialog.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 
 import '../../Models/Assignment.dart';
@@ -18,13 +19,17 @@ class AddAssignmentSubmissionScreen extends StatefulWidget {
   final Assignment assignment;
   final User user;
 
-  const AddAssignmentSubmissionScreen({Key? key,required this.assignment,required this.user}) : super(key: key);
+  const AddAssignmentSubmissionScreen(
+      {Key? key, required this.assignment, required this.user})
+      : super(key: key);
 
   @override
-  State<AddAssignmentSubmissionScreen> createState() => _AddAssignmentSubmissionScreenState();
+  State<AddAssignmentSubmissionScreen> createState() =>
+      _AddAssignmentSubmissionScreenState();
 }
 
-class _AddAssignmentSubmissionScreenState extends State<AddAssignmentSubmissionScreen> {
+class _AddAssignmentSubmissionScreenState
+    extends State<AddAssignmentSubmissionScreen> {
   bool isLoading = false;
 
   TextEditingController commentsController = TextEditingController();
@@ -55,24 +60,25 @@ class _AddAssignmentSubmissionScreenState extends State<AddAssignmentSubmissionS
             IconButton(
               onPressed: () async {
                 if (formKey.currentState!.validate() &&
-                    pickedFiles.isNotEmpty) {
+                    pickedFiles.isNotEmpty &&
+                    (await showConfirmationDialog(context) ?? false)) {
                   try {
                     setState(() {
                       isLoading = true;
                     });
-                    AssignmentSubmission assignment_submission = AssignmentSubmission(
-                      assignment: widget.assignment.id,
-                      comments:  commentsController.text,
-                      student: Student(id: widget.user.id),
-                      submission: []
-                    );
+                    AssignmentSubmission assignment_submission =
+                        AssignmentSubmission(
+                            assignment: widget.assignment.id,
+                            comments: commentsController.text,
+                            student: Student(id: widget.user.id),
+                            submission: []);
                     final storage = FirebaseStorage.instance;
                     String fcs_path = "";
                     for (var file in pickedFiles) {
                       fcs_path =
-                      "assignment_submissions/${DateTime.now().toIso8601String()}.${file.extension}";
+                          "assignment_submissions/${DateTime.now().toIso8601String()}.${file.extension}";
                       TaskSnapshot task =
-                      await storage.ref(fcs_path).putFile(File(file.path!));
+                          await storage.ref(fcs_path).putFile(File(file.path!));
                       if (task.state == TaskState.error) {
                         print("An error occurred");
                       } else {
@@ -89,7 +95,9 @@ class _AddAssignmentSubmissionScreenState extends State<AddAssignmentSubmissionS
                       }
                     }
                     AssignmentSubmission createdAssignmentSubmission =
-                    await AssignmentSubmissionService.create_assignment_submission(assignment_submission);
+                        await AssignmentSubmissionService
+                            .create_assignment_submission(
+                                assignment_submission);
                     // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -105,7 +113,8 @@ class _AddAssignmentSubmissionScreenState extends State<AddAssignmentSubmissionS
                   } catch (e) {
                     print(e);
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(e.toString().replaceFirst("Exception: ", "")),
+                      content:
+                          Text(e.toString().replaceFirst("Exception: ", "")),
                     ));
 
                     setState(() {

@@ -13,6 +13,7 @@ import 'package:validatorless/validatorless.dart';
 
 import '../../Models/FileData.dart';
 import '../../Models/Resource.dart';
+import '../../utils/showConfirmationDialog.dart';
 
 class UpdateResourceScreen extends StatefulWidget {
   final Resource resource;
@@ -66,7 +67,8 @@ class _UpdateResourceScreenState extends State<UpdateResourceScreen> {
               onPressed: () async {
                 if (formKey.currentState!.validate() &&
                     (_pickedFiles.isNotEmpty ||
-                        (widget.resource.files?.isNotEmpty)!)) {
+                        (widget.resource.files?.isNotEmpty)!) &&
+                    (await showConfirmationDialog(context) ?? false)) {
                   try {
                     setState(() {
                       isLoading = true;

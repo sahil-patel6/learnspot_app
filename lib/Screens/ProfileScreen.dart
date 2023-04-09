@@ -6,6 +6,7 @@ import 'package:validatorless/validatorless.dart';
 
 import '../Models/User.dart';
 import '../preferences.dart';
+import '../utils/showConfirmationDialog.dart';
 import 'SplashScreen.dart';
 import 'UpdateProfileScreen.dart';
 
@@ -18,6 +19,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool isLoading = false;
+  bool isLogoutLoading = false;
 
   late User? user;
 
@@ -225,17 +227,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         height: 18,
                       ),
                       ElevatedButton(
-                        onPressed: () async {
-                          await Preferences.removeUser();
-                          await DefaultCacheManager().emptyCache();
-                          // ignore: use_build_context_synchronously
-                          Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const SplashScreen()),
-                              (route) => false);
-                        },
-                        child: const Text("Log out"),
+                        onPressed: !isLogoutLoading
+                            ? () async {
+                                // ignore: use_build_context_synchronously
+                                if (await showConfirmationDialog(context) ??
+                                    false) {
+                                  try {
+                                    setState(() {
+                                      isLogoutLoading = true;
+                                    });
+                                    String message =
+                                        await ProfileService.logout();
+                                    await Preferences.removeUser();
+                                    await DefaultCacheManager().emptyCache();
+
+                                    setState(() {
+                                      isLogoutLoading = false;
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content:
+                                            Text("Logged out Successfully"),
+                                      ),
+                                    );
+                                    Navigator.pushAndRemoveUntil(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                const SplashScreen()),
+                                        (route) => false);
+                                  } catch (e) {
+                                    print(e.toString());
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(SnackBar(
+                                      content: Text(e
+                                          .toString()
+                                          .replaceFirst("Exception: ", "")),
+                                    ));
+                                    setState(() {
+                                      isLogoutLoading = false;
+                                    });
+                                  }
+                                  setState(() {
+                                    isLogoutLoading = false;
+                                  });
+                                }
+                              }
+                            : () {},
+                        child: isLogoutLoading
+                            ? Container(
+                                height: 20,
+                                width: 20,
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 20),
+                                child: const CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text("Log out"),
                       ),
                       const SizedBox(
                         height: 20,
@@ -291,33 +340,37 @@ class _UpdatePasswordButtonState extends State<UpdatePasswordButton> {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () async {
-        setState(() {
-          isLoading = true;
-        });
-        try {
-          if (widget.formkey.currentState!.validate()) {
-            User user = await ProfileService.update_password(widget.user,
-                widget.currentPassword.text, widget.newPassword.text);
-            print(user);
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("Password Updated Successfully"),
-              ),
-            );
-          }
-        } catch (e) {
-          print(e.toString().replaceFirst("Exception: ", ""));
-          widget.setErrorMessage(e.toString().replaceFirst("Exception: ", ""));
-          // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          //   content: Text(e.toString().replaceFirst("Exception: ", "")),
-          // ));
-        }
-        setState(() {
-          isLoading = false;
-        });
-      },
+      onPressed: !isLoading
+          ? () async {
+              try {
+                if (widget.formkey.currentState!.validate() &&
+                    (await showConfirmationDialog(context) ?? false)) {
+                  setState(() {
+                    isLoading = true;
+                  });
+                  User user = await ProfileService.update_password(widget.user,
+                      widget.currentPassword.text, widget.newPassword.text);
+                  print(user);
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Password Updated Successfully"),
+                    ),
+                  );
+                }
+              } catch (e) {
+                print(e.toString().replaceFirst("Exception: ", ""));
+                widget.setErrorMessage(
+                    e.toString().replaceFirst("Exception: ", ""));
+                // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                //   content: Text(e.toString().replaceFirst("Exception: ", "")),
+                // ));
+              }
+              setState(() {
+                isLoading = false;
+              });
+            }
+          : () {},
       child: isLoading
           ? const SizedBox(
               width: 15,

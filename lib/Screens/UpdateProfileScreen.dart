@@ -9,6 +9,7 @@ import 'package:validatorless/validatorless.dart';
 import '../Models/User.dart';
 import '../Services/ProfileService.dart';
 import '../preferences.dart';
+import '../utils/showConfirmationDialog.dart';
 
 class UpdateProfileScreen extends StatefulWidget {
   User user;
@@ -104,7 +105,8 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
               : IconButton(
                   onPressed: () async {
                     print(await Preferences.getUser());
-                    if (formKey.currentState!.validate()) {
+                    if (formKey.currentState!.validate() &&
+                        (await showConfirmationDialog(context) ?? false)) {
                       setState(() {
                         isLoading = true;
                       });
@@ -156,7 +158,8 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
                       } catch (e) {
                         print(e);
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(e.toString().replaceFirst("Exception: ", "")),
+                          content: Text(
+                              e.toString().replaceFirst("Exception: ", "")),
                         ));
                       }
                       setState(() {

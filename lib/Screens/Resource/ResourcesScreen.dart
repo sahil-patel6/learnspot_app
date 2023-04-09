@@ -9,6 +9,7 @@ import 'package:open_file_plus/open_file_plus.dart';
 
 import '../../Models/FileData.dart';
 import '../../Models/User.dart';
+import '../../utils/showConfirmationDialog.dart';
 import '../../utils/showLoaderDialog.dart';
 import 'AddResourceScreen.dart';
 import 'UpdateResourceScreen.dart';
@@ -281,33 +282,37 @@ class _DeleteResourceButtonState extends State<DeleteResourceButton> {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () async {
-        setState(() {
-          isLoading = true;
-        });
-        try {
-          String response =
-              await ResourceService.delete_resource(widget.resource.id!);
-          print(response);
-          widget.removeResource(widget.resource);
-          widget.resource.files?.forEach((file) async {
-            await DefaultCacheManager().removeFile(file.downloadUrl!);
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response),
-            ),
-          );
-        } catch (e) {
-          print(e.toString().replaceFirst("Exception: ", ""));
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(e.toString().replaceFirst("Exception: ", "")),
-          ));
-        }
-        setState(() {
-          isLoading = false;
-        });
-      },
+      onPressed: !isLoading
+          ? () async {
+              if (await showConfirmationDialog(context) ?? false) {
+                setState(() {
+                  isLoading = true;
+                });
+                try {
+                  String response = await ResourceService.delete_resource(
+                      widget.resource.id!);
+                  print(response);
+                  widget.removeResource(widget.resource);
+                  widget.resource.files?.forEach((file) async {
+                    await DefaultCacheManager().removeFile(file.downloadUrl!);
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(response),
+                    ),
+                  );
+                } catch (e) {
+                  print(e.toString().replaceFirst("Exception: ", ""));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(e.toString().replaceFirst("Exception: ", "")),
+                  ));
+                }
+                setState(() {
+                  isLoading = false;
+                });
+              }
+            }
+          : (){},
       child: isLoading
           ? Center(
               child: Container(

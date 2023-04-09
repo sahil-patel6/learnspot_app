@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:intl/intl.dart';
 import 'package:lms_app/Models/AssignmentSubmission.dart';
+import 'package:lms_app/utils/showConfirmationDialog.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 
 import '../../Models/Assignment.dart';
@@ -332,34 +333,40 @@ class _DeleteAssignmentSubmissionButtonState
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () async {
-        setState(() {
-          isLoading = true;
-        });
-        try {
-          String response =
-              await AssignmentSubmissionService.delete_assignment_submission(
-                  widget.assignment_submission.id!);
-          print(response);
-          widget.removeAssignmentSubmission(widget.assignment_submission);
-          widget.assignment_submission.submission?.forEach((file) async {
-            await DefaultCacheManager().removeFile(file.downloadUrl!);
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response),
-            ),
-          );
-        } catch (e) {
-          print(e.toString().replaceFirst("Exception: ", ""));
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(e.toString().replaceFirst("Exception: ", "")),
-          ));
-        }
-        setState(() {
-          isLoading = false;
-        });
-      },
+      onPressed: !isLoading
+          ? () async {
+              if (await showConfirmationDialog(context) ?? false) {
+                setState(() {
+                  isLoading = true;
+                });
+                try {
+                  String response = await AssignmentSubmissionService
+                      .delete_assignment_submission(
+                          widget.assignment_submission.id!);
+                  print(response);
+                  widget
+                      .removeAssignmentSubmission(widget.assignment_submission);
+                  widget.assignment_submission.submission
+                      ?.forEach((file) async {
+                    await DefaultCacheManager().removeFile(file.downloadUrl!);
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(response),
+                    ),
+                  );
+                } catch (e) {
+                  print(e.toString().replaceFirst("Exception: ", ""));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(e.toString().replaceFirst("Exception: ", "")),
+                  ));
+                }
+                setState(() {
+                  isLoading = false;
+                });
+              }
+            }
+          : () {},
       child: isLoading
           ? Center(
               child: Container(

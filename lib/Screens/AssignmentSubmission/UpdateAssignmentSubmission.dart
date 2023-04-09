@@ -7,6 +7,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:lms_app/Services/AssignmentSubmissionService.dart';
+import 'package:lms_app/utils/showConfirmationDialog.dart';
 import 'package:lms_app/utils/showLoaderDialog.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:validatorless/validatorless.dart';
@@ -66,7 +67,8 @@ class _UpdateAssignmentSubmissionScreenState
                 if (formKey.currentState!.validate() &&
                     (_pickedFiles.isNotEmpty ||
                         (widget
-                            .assignment_submission.submission?.isNotEmpty)!)) {
+                            .assignment_submission.submission?.isNotEmpty)!) &&
+                    (await showConfirmationDialog(context) ?? false)) {
                   try {
                     setState(() {
                       isLoading = true;
@@ -118,7 +120,8 @@ class _UpdateAssignmentSubmissionScreenState
                   } catch (e) {
                     print(e);
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(e.toString().replaceFirst("Exception: ", "")),
+                      content:
+                          Text(e.toString().replaceFirst("Exception: ", "")),
                     ));
                   }
                 }

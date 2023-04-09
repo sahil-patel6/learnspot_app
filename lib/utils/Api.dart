@@ -10,6 +10,9 @@ class API {
   /// GET USER PROFILE URLS
   static String GET_USER_PROFILE_URL(String user_id,String type_of_user) => "$BASE_URL/$type_of_user/$user_id";
 
+  /// LOG OUT USER
+  static String LOGOUT_USER(String user_id,String type_of_user) => "$BASE_URL/$type_of_user/$user_id/signout";
+
   /// GET LIST OF SUBJECTS
   static String SUBJECT_LIST_TEACHER_URL(String teacher_id) => "$BASE_URL/subjects/teacher/$teacher_id";
   static String GET_LIST_OF_SUBJECTS_BY_SEMESTER(String semester_id,String user_id,String type_of_user) => "$BASE_URL/subjects/$semester_id/$type_of_user/$user_id";

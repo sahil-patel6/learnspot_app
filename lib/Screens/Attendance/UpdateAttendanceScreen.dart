@@ -6,6 +6,7 @@ import 'package:lms_app/Models/Subject.dart';
 import '../../Models/AttendanceSession.dart';
 import '../../Models/Student.dart';
 import '../../Services/AttendanceService.dart';
+import '../../utils/showConfirmationDialog.dart';
 
 class UpdateAttendanceScreen extends StatefulWidget {
   final Subject subject;
@@ -183,6 +184,12 @@ class _UpdateAttendanceScreenState extends State<UpdateAttendanceScreen> {
                         content:
                             Text("End Time should be greater than Start Time"),
                       ));
+                      setState(() {
+                        isUploadingAttendance = false;
+                      });
+                      return;
+                    }
+                    if (!(await showConfirmationDialog(context) ?? false)) {
                       setState(() {
                         isUploadingAttendance = false;
                       });
