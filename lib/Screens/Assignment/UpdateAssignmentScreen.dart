@@ -95,7 +95,7 @@ class _UpdateAssignmentScreenState extends State<UpdateAssignmentScreen> {
                       );
                       return;
                     }
-                    if (await showConfirmationDialog(context) ?? false) {
+                    if (!(await showConfirmationDialog(context) ?? false)) {
                       return;
                     }
                     setState(() {

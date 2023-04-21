@@ -79,7 +79,7 @@ class _AddAssignmentScreenState extends State<AddAssignmentScreen> {
                       );
                       return;
                     }
-                    if (await showConfirmationDialog(context) ?? false){
+                    if (!(await showConfirmationDialog(context) ?? false)){
                       return;
                     }
                     setState(() {
